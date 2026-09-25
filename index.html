@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Washing Plant - Official Tank 100-1 Calibration System</title>
+  <title>Washing Plant - Multi-Stage Quality & Loss System</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -18,7 +18,7 @@
         </div>
         <div>
           <h1 class="text-xl font-bold tracking-wide">Washing Plant - Tank Farm</h1>
-          <p class="text-xs text-slate-400">Kalibrasi Resmi Tank 100-1 & Kalkulasi Loss Auto</p>
+          <p class="text-xs text-slate-400">Pencatatan Quality Feed Awal & Quality After Washing</p>
         </div>
       </div>
       <div class="flex items-center gap-2">
@@ -40,7 +40,7 @@
         <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
           <i class="fa-solid fa-list-check text-amber-500"></i> Batch Berjalan
         </h2>
-        <span class="text-xs text-slate-400">Matched 100% dengan Tabel Kalibrasi Tank 100-1</span>
+        <span class="text-xs text-slate-400">Termasuk Quality Awal Minyak Feed</span>
       </div>
       <div id="activeBatchesContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <!-- Rendered via JS -->
@@ -50,7 +50,7 @@
     <!-- History Table -->
     <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
       <div class="p-5 border-b border-slate-100 flex flex-wrap justify-between items-center gap-4">
-        <h2 class="text-lg font-bold text-slate-800">Riwayat Seluruh Batch (Perhitungan Tonase & Loss)</h2>
+        <h2 class="text-lg font-bold text-slate-800">Riwayat Seluruh Batch (Quality Awal vs Akhir & Loss)</h2>
         <input type="text" id="searchInput" oninput="renderTable()" placeholder="Cari Batch ID / Tanki..." class="px-3 py-1.5 border border-slate-300 rounded-lg text-sm w-full sm:w-64 focus:outline-none focus:ring-2 focus:ring-amber-500">
       </div>
       <div class="overflow-x-auto">
@@ -60,12 +60,12 @@
               <th class="p-3">Batch ID</th>
               <th class="p-3">Tanki</th>
               <th class="p-3">Sounding Awal (mm / Kg)</th>
+              <th class="p-3">Lab Feed (Phos / FFA)</th>
               <th class="p-3">Dosis CA / Air</th>
               <th class="p-3">Sounding Campuran (mm / Kg)</th>
               <th class="p-3">Sounding Drain (mm / Kg)</th>
               <th class="p-3">QTY Loss Drain (Kg)</th>
-              <th class="p-3">Durasi Drain</th>
-              <th class="p-3">Lab (Phos / FFA)</th>
+              <th class="p-3">Lab Washing (Phos / FFA)</th>
               <th class="p-3">Status</th>
               <th class="p-3 text-center">Aksi</th>
             </tr>
@@ -79,9 +79,9 @@
 
   </main>
 
-  <!-- Modals -->
+  <!-- Modal 1: Buat Batch Baru + Input Quality Feed Awal -->
   <div id="newBatchModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex justify-center items-center hidden p-4">
-    <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl space-y-4">
+    <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b pb-3">
         <h3 class="font-bold text-slate-800 text-lg">Buat Batch Baru</h3>
         <button onclick="closeNewBatchModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-xl"></i></button>
@@ -89,11 +89,11 @@
       <form id="newBatchForm" onsubmit="handleCreateBatch(event)" class="space-y-3">
         <div>
           <label class="block text-xs font-semibold text-slate-600 mb-1">Target Tanki Washing</label>
-          <select id="targetTank" class="w-full border p-2 rounded-lg text-sm font-medium focus:ring-2 focus:ring-amber-500">
-            <option value="T100-1">T100-1</option>
-            <option value="T100-2">T100-2</option>
-            <option value="T100-3">T100-3</option>
-            <option value="T100-4">T100-4</option>
+          <select id="targetTank" onchange="updateBottomNotice()" class="w-full border p-2 rounded-lg text-sm font-medium focus:ring-2 focus:ring-amber-500">
+            <option value="T100-1">T100-1 (+153 mm)</option>
+            <option value="T100-2">T100-2 (+153 mm)</option>
+            <option value="T100-3">T100-3 (+140 mm)</option>
+            <option value="T100-4">T100-4 (+140 mm)</option>
           </select>
         </div>
         <div>
@@ -102,14 +102,41 @@
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Sounding Awal (mm)</label>
-            <input type="number" step="1" id="initialSounding" placeholder="153" required class="w-full border p-2 rounded-lg text-sm">
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Sounding Input (mm)</label>
+            <input type="number" step="1" id="initialSounding" placeholder="Misal: 0" required class="w-full border p-2 rounded-lg text-sm">
+            <span class="text-[10px] text-amber-600 font-semibold mt-0.5 block" id="initialNotice">Akan ditambah +153 mm</span>
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Suhu Feed (°C)</label>
             <input type="number" step="1" id="feedTemp" placeholder="52" required class="w-full border p-2 rounded-lg text-sm">
           </div>
         </div>
+
+        <!-- Section Input Quality Feed Awal (Opsional / Awal) -->
+        <div class="border-t pt-3 space-y-2">
+          <span class="text-xs font-bold text-indigo-700 block flex items-center gap-1">
+            <i class="fa-solid fa-flask"></i> Quality Minyak Mentah (Sebelum CA & Air)
+          </span>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-500">Phosporus (PPM)</label>
+              <input type="number" step="0.001" id="feedPhos" placeholder="Contoh: 25.3" class="w-full border p-1.5 rounded text-sm">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-500">FFA (%)</label>
+              <input type="number" step="0.01" id="feedFFA" placeholder="Contoh: 5.1" class="w-full border p-1.5 rounded text-sm">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-500">M&I (%)</label>
+              <input type="number" step="0.01" id="feedMI" placeholder="Contoh: 0.25" class="w-full border p-1.5 rounded text-sm">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-500">OG (PPM)</label>
+              <input type="number" step="0.1" id="feedOG" placeholder="Contoh: 8.0" class="w-full border p-1.5 rounded text-sm">
+            </div>
+          </div>
+        </div>
+
         <div class="pt-3 flex gap-2">
           <button type="button" onclick="closeNewBatchModal()" class="w-1/2 py-2 border rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-50">Batal</button>
           <button type="submit" class="w-1/2 py-2 bg-amber-500 hover:bg-amber-600 text-slate-900 rounded-lg text-sm font-bold">Simpan Batch</button>
@@ -118,6 +145,7 @@
     </div>
   </div>
 
+  <!-- Modal 2: Input Chemical & Dosis Air -->
   <div id="dosingModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex justify-center items-center hidden p-4">
     <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl space-y-4">
       <div class="flex justify-between items-center border-b pb-3">
@@ -139,11 +167,12 @@
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Sounding Campuran (mm)</label>
-            <input type="number" step="1" id="soundingAfterDosing" placeholder="618" required class="w-full border p-2 rounded-lg text-sm">
+            <input type="number" step="1" id="soundingAfterDosing" placeholder="Misal: 6970" required class="w-full border p-2 rounded-lg text-sm">
+            <span class="text-[10px] text-amber-600 font-semibold mt-0.5 block" id="dosingNotice">+ Offset Bottom Tank</span>
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Suhu Campuran (°C)</label>
-            <input type="number" step="1" id="mixTemp" placeholder="55" required class="w-full border p-2 rounded-lg text-sm">
+            <input type="number" step="1" id="mixTemp" placeholder="53" required class="w-full border p-2 rounded-lg text-sm">
           </div>
         </div>
         <div class="pt-3 flex gap-2">
@@ -154,6 +183,7 @@
     </div>
   </div>
 
+  <!-- Modal 3: Stop Drain & Input Sounding Akhir -->
   <div id="stopDrainModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex justify-center items-center hidden p-4">
     <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl space-y-4">
       <div class="flex justify-between items-center border-b pb-3">
@@ -165,11 +195,12 @@
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Sounding Drain (mm)</label>
-            <input type="number" step="1" id="soundingAfterDrain" placeholder="608" required class="w-full border p-2 rounded-lg text-sm">
+            <input type="number" step="1" id="soundingAfterDrain" placeholder="Misal: 3605" required class="w-full border p-2 rounded-lg text-sm">
+            <span class="text-[10px] text-amber-600 font-semibold mt-0.5 block" id="drainNotice">+ Offset Bottom Tank</span>
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Suhu Drain (°C)</label>
-            <input type="number" step="1" id="drainTemp" placeholder="60" required class="w-full border p-2 rounded-lg text-sm">
+            <input type="number" step="1" id="drainTemp" placeholder="51" required class="w-full border p-2 rounded-lg text-sm">
           </div>
         </div>
         <div class="pt-3 flex gap-2">
@@ -180,10 +211,11 @@
     </div>
   </div>
 
+  <!-- Modal 4: Input Data Lab Washing Akhir -->
   <div id="labModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex justify-center items-center hidden p-4">
     <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl space-y-4">
       <div class="flex justify-between items-center border-b pb-3">
-        <h3 class="font-bold text-slate-800 text-lg">Input Hasil Laboratorium</h3>
+        <h3 class="font-bold text-slate-800 text-lg">Input Hasil Lab Washing Akhir</h3>
         <button onclick="closeLabModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-xl"></i></button>
       </div>
       <form id="labForm" onsubmit="handleSaveLab(event)" class="space-y-3">
@@ -217,7 +249,12 @@
   </div>
 
   <script>
-    // --- Precise POME Density Lookup ---
+    function getTankBottomOffset(tankName) {
+      if (tankName === 'T100-1' || tankName === 'T100-2') return 153;
+      if (tankName === 'T100-3' || tankName === 'T100-4') return 140;
+      return 0;
+    }
+
     const POME_DENSITY = {
       20: 0.9094, 21: 0.9087, 22: 0.9080, 23: 0.9073, 24: 0.9066, 25: 0.9059,
       26: 0.9052, 27: 0.9045, 28: 0.9038, 29: 0.9031, 30: 0.9024, 31: 0.9018,
@@ -230,7 +267,6 @@
       68: 0.8766, 69: 0.8759, 70: 0.8752
     };
 
-    // --- BASE CM LOOKUP ARRAY FOR TANK 100-1 (Directly mapped from user calibration data) ---
     const TANK_100_1_BASE_CM = {
       0:0, 1:7, 2:14, 3:21, 4:29, 5:37, 6:45, 7:53, 8:61, 9:69, 10:77, 11:85, 12:93, 13:101, 14:109, 15:117,
       16:125, 17:133, 18:141, 19:149, 20:157, 21:165, 22:173, 23:182, 24:191, 25:200, 26:210, 27:220, 28:230,
@@ -331,34 +367,16 @@
       885:127336, 886:127501, 887:127666, 888:127831, 889:127997
     };
 
-    // Fraction Ring Lookup Table (1mm - 9mm) based on Ring Height Ranges
     function getMMFractionLiter(soundingMM) {
       const mmRemainder = soundingMM % 10;
       if (mmRemainder === 0) return 0;
-
       const meterVal = soundingMM / 1000;
-      if (meterVal < 0.75) {
-        const ring0 = [0, 1.1, 2.2, 3.3, 4.4, 5.5, 6.6, 7.7, 8.8, 9.9];
-        return ring0[mmRemainder] || 0;
-      } else if (meterVal < 1.5) {
-        const ring1 = [0, 2.1, 3.2, 4.3, 5.4, 6.5, 7.6, 8.7, 9.8, 10.9];
-        return ring1[mmRemainder] || 0;
-      } else if (meterVal < 3.0) {
-        const ring3 = [0, 3.1, 4.2, 5.3, 6.4, 7.5, 8.6, 9.7, 10.8, 11.9];
-        return ring3[mmRemainder] || 0;
-      } else if (meterVal < 4.5) {
-        const ring4 = [0, 3.1, 4.2, 5.3, 6.4, 7.5, 8.6, 9.7, 10.8, 11.9];
-        return ring4[mmRemainder] || 0;
-      } else if (meterVal < 6.0) {
-        const ring6 = [0, 3.1, 4.2, 5.3, 6.4, 7.5, 8.6, 9.7, 10.8, 11.9];
-        return ring6[mmRemainder] || 0;
-      } else {
-        const ring7 = [0, 3.8, 4.9, 6.0, 7.1, 8.2, 9.3, 10.4, 11.5, 12.6];
-        return ring7[mmRemainder] || 0;
-      }
+      if (meterVal < 0.75) return [0, 1.1, 2.2, 3.3, 4.4, 5.5, 6.6, 7.7, 8.8, 9.9][mmRemainder] || 0;
+      if (meterVal < 1.5) return [0, 2.1, 3.2, 4.3, 5.4, 6.5, 7.6, 8.7, 9.8, 10.9][mmRemainder] || 0;
+      if (meterVal < 6.0) return [0, 3.1, 4.2, 5.3, 6.4, 7.5, 8.6, 9.7, 10.8, 11.9][mmRemainder] || 0;
+      return [0, 3.8, 4.9, 6.0, 7.1, 8.2, 9.3, 10.4, 11.5, 12.6][mmRemainder] || 0;
     }
 
-    // Exact Lookup Function replicating your Excel VLOOKUP Formula
     function lookupLiterT100_1(soundingMM) {
       if (!soundingMM || soundingMM <= 0) return 0;
       const baseCM = Math.floor(soundingMM / 10);
@@ -379,20 +397,23 @@
       return 1 + ((tempC - 40) * 0.0000335);
     }
 
-    function calculateExactKg(soundingMM, tempC) {
-      if (!soundingMM || !tempC) return { liter: 0, vcf: 1, density: 0, kg: 0 };
-      const liter = lookupLiterT100_1(soundingMM);
+    function calculateExactKgWithOffset(rawInputMM, tempC, tankName) {
+      if (rawInputMM === undefined || rawInputMM === null || isNaN(rawInputMM) || !tempC) {
+        return { rawMM: 0, finalMM: 0, offset: 0, liter: 0, vcf: 1, density: 0, kg: 0 };
+      }
+      const offset = getTankBottomOffset(tankName);
+      const finalMM = rawInputMM + offset;
+      const liter = lookupLiterT100_1(finalMM);
       const vcf = calculateVCF(tempC);
       const density = getPOMEDensity(tempC);
       const kg = Math.round(liter * density * vcf);
-      return { liter, vcf, density, kg };
+      return { rawMM: rawInputMM, finalMM, offset, liter, vcf, density, kg };
     }
 
-    // --- Data Storage & State ---
-    let batches = JSON.parse(localStorage.getItem('wp_batches_v5')) || [];
+    let batches = JSON.parse(localStorage.getItem('wp_batches_v7')) || [];
 
     function saveState() {
-      localStorage.setItem('wp_batches_v5', JSON.stringify(batches));
+      localStorage.setItem('wp_batches_v7', JSON.stringify(batches));
       renderApp();
     }
 
@@ -415,13 +436,13 @@
         let statusBadge = '';
         let actionButtons = '';
 
-        const initCalc = calculateExactKg(b.initialSounding, b.feedTemp);
-        const mixCalc = calculateExactKg(b.soundingAfterDosing, b.mixTemp);
-        const drainCalc = calculateExactKg(b.soundingAfterDrain, b.drainTemp);
+        const initCalc = calculateExactKgWithOffset(b.rawInitialSounding, b.feedTemp, b.targetTank);
+        const mixCalc = calculateExactKgWithOffset(b.rawSoundingAfterDosing, b.mixTemp, b.targetTank);
+        const drainCalc = calculateExactKgWithOffset(b.rawSoundingAfterDrain, b.drainTemp, b.targetTank);
         const qtyLossKg = (mixCalc.kg && drainCalc.kg) ? (mixCalc.kg - drainCalc.kg) : '-';
 
         if (b.status === 'INITIAL') {
-          statusBadge = `<span class="bg-slate-100 text-slate-700 text-xs px-2.5 py-1 rounded-full font-semibold">Saldo Awal</span>`;
+          statusBadge = `<span class="bg-slate-100 text-slate-700 text-xs px-2.5 py-1 rounded-full font-semibold">Penerimaan Feed</span>`;
           actionButtons = `
             <button onclick="openDosingModal('${b.id}')" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-xs font-bold transition flex justify-center items-center gap-1.5">
               <i class="fa-solid fa-flask"></i> Input Dosis CA & Air
@@ -443,7 +464,7 @@
           actionButtons = `
             <div class="grid grid-cols-2 gap-2">
               <button onclick="openLabModal('${b.id}')" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 py-2 rounded-lg text-xs font-bold transition border border-indigo-200">
-                <i class="fa-solid fa-vial"></i> Input Lab
+                <i class="fa-solid fa-vial"></i> Input Lab Washing
               </button>
               <button onclick="sendToWhatsApp('${b.id}')" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 py-2 rounded-lg text-xs font-bold transition border border-emerald-200">
                 <i class="fa-brands fa-whatsapp"></i> Kirim WA
@@ -466,10 +487,12 @@
           </div>
           <div class="grid grid-cols-2 gap-2 text-xs bg-slate-50 p-2.5 rounded-lg border border-slate-100">
             <div><span class="text-slate-400 block">Asal Tank:</span><span class="font-semibold">${b.sourceTank}</span></div>
-            <div><span class="text-slate-400 block">Awal (mm/Kg):</span><span class="font-semibold">${b.initialSounding} mm (${initCalc.kg.toLocaleString('id-ID')} Kg)</span></div>
-            <div><span class="text-slate-400 block">Dosis CA & Air:</span><span class="font-semibold">${b.caSackCount ? b.caSackCount + ' Sack CA / ' + b.waterQty + ' M³' : '-'}</span></div>
-            <div><span class="text-slate-400 block">Campuran (mm/Kg):</span><span class="font-semibold">${b.soundingAfterDosing ? b.soundingAfterDosing + ' mm (' + mixCalc.kg.toLocaleString('id-ID') + ' Kg)' : '-'}</span></div>
-            <div><span class="text-slate-400 block">Drain (mm/Kg):</span><span class="font-semibold">${b.soundingAfterDrain ? b.soundingAfterDrain + ' mm (' + drainCalc.kg.toLocaleString('id-ID') + ' Kg)' : '-'}</span></div>
+            <div><span class="text-slate-400 block">Awal (Final mm/Kg):</span><span class="font-semibold">${initCalc.finalMM} mm<br><b>${initCalc.kg.toLocaleString('id-ID')} Kg</b></span></div>
+            <div class="col-span-2 text-indigo-700 bg-indigo-50 p-1.5 rounded font-medium">
+              <b>Lab Feed Awal:</b> ${b.feedLab && b.feedLab.phos ? `Phos: ${b.feedLab.phos} ppm \vert{} FFA:${b.feedLab.ffa}%` : 'Belum diisi'}
+            </div>
+            <div><span class="text-slate-400 block">Dosis CA & Air:</span><span class="font-semibold">${b.caSackCount ? b.caSackCount + ' Sack / ' + b.waterQty + ' M³' : '-'}</span></div>
+            <div><span class="text-slate-400 block">Drain (Final mm/Kg):</span><span class="font-semibold">${drainCalc.finalMM ? drainCalc.finalMM + ' mm (' + drainCalc.kg.toLocaleString('id-ID') + ' Kg)' : '-'}</span></div>
             <div class="col-span-2 text-red-700 bg-red-50 p-1.5 rounded font-extrabold text-center">
               🔥 Total QTY Loss Drain: ${typeof qtyLossKg === 'number' ? qtyLossKg.toLocaleString('id-ID') + ' Kg' : '-'}
             </div>
@@ -490,6 +513,11 @@
     }
 
     function openStopDrainModal(batchId) {
+      const b = batches.find(x => x.id === batchId);
+      if (b) {
+        const offset = getTankBottomOffset(b.targetTank);
+        document.getElementById('drainNotice').innerText = `Akan otomatis ditambah +${offset} mm (Bottom)`;
+      }
       document.getElementById('stopDrainBatchId').value = batchId;
       document.getElementById('stopDrainModal').classList.remove('hidden');
     }
@@ -502,7 +530,7 @@
         const start = new Date(b.drainStartTime);
         const end = new Date(b.drainEndTime);
         b.drainDurationMinutes = Math.round((end - start) / (1000 * 60));
-        b.soundingAfterDrain = parseInt(document.getElementById('soundingAfterDrain').value);
+        b.rawSoundingAfterDrain = parseInt(document.getElementById('soundingAfterDrain').value);
         b.drainTemp = parseInt(document.getElementById('drainTemp').value);
         b.status = 'DRAINED';
         closeStopDrainModal();
@@ -525,23 +553,24 @@
       const b = batches.find(x => x.id === id);
       if (!b) return;
 
-      const initCalc = calculateExactKg(b.initialSounding, b.feedTemp);
-      const mixCalc = calculateExactKg(b.soundingAfterDosing, b.mixTemp);
-      const drainCalc = calculateExactKg(b.soundingAfterDrain, b.drainTemp);
+      const initCalc = calculateExactKgWithOffset(b.rawInitialSounding, b.feedTemp, b.targetTank);
+      const mixCalc = calculateExactKgWithOffset(b.rawSoundingAfterDosing, b.mixTemp, b.targetTank);
+      const drainCalc = calculateExactKgWithOffset(b.rawSoundingAfterDrain, b.drainTemp, b.targetTank);
       const qtyLossKg = (mixCalc.kg && drainCalc.kg) ? (mixCalc.kg - drainCalc.kg) : 0;
 
       const text = `*LAPORAN PROSES DRAIN WASHING PLANT*
 Batch: ${b.id}
 Tanki: ${b.targetTank} (Asal: ${b.sourceTank})
 
-- Sounding Awal: ${b.initialSounding} mm (${initCalc.kg.toLocaleString('id-ID')} Kg @ ${b.feedTemp}°C)
+- Sounding Awal: Input ${b.rawInitialSounding}mm -> *Final ${initCalc.finalMM}mm* (${initCalc.kg.toLocaleString('id-ID')} Kg @ ${b.feedTemp}°C)
+  *Lab Feed Awal:* Phos ${b.feedLab?b.feedLab.phos:'-'} ppm | FFA ${b.feedLab?b.feedLab.ffa:'-'}%
 - Dosis CA: ${b.caSackCount || 0} Sack | Air: ${b.waterQty || 0} M³
-- Sounding Campuran: ${b.soundingAfterDosing || '-'} mm (${mixCalc.kg.toLocaleString('id-ID')} Kg @ ${b.mixTemp||'-'}°C)
-- Sounding Selesai Drain: ${b.soundingAfterDrain || '-'} mm (${drainCalc.kg.toLocaleString('id-ID')} Kg @ ${b.drainTemp||'-'}°C)
+- Sounding Campuran: Input ${b.rawSoundingAfterDosing||0}mm -> *Final ${mixCalc.finalMM}mm* (${mixCalc.kg.toLocaleString('id-ID')} Kg @ ${b.mixTemp||'-'}°C)
+- Sounding Selesai Drain: Input ${b.rawSoundingAfterDrain||0}mm -> *Final ${drainCalc.finalMM}mm* (${drainCalc.kg.toLocaleString('id-ID')} Kg @ ${b.drainTemp||'-'}°C)
 - *TOTAL QTY LOSS DRAIN: ${qtyLossKg.toLocaleString('id-ID')} Kg*
 - Lama Drain: ${b.drainDurationMinutes ? formatDuration(b.drainDurationMinutes) : '-'}
 
-*LAB RESULT:*
+*LAB RESULT AFTER WASHING:*
 - Phosporus: ${b.lab ? b.lab.phos + ' PPM' : '-'}
 - FFA: ${b.lab ? b.lab.ffa + ' %' : '-'}
 - M&I: ${b.lab ? b.lab.mi + ' %' : '-'}
@@ -550,18 +579,39 @@ Tanki: ${b.targetTank} (Asal: ${b.sourceTank})
       window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
     }
 
-    function openNewBatchModal() { document.getElementById('newBatchModal').classList.remove('hidden'); }
+    function updateBottomNotice() {
+      const tank = document.getElementById('targetTank').value;
+      const offset = getTankBottomOffset(tank);
+      document.getElementById('initialNotice').innerText = `Akan otomatis ditambah +${offset} mm (Bottom)`;
+    }
+
+    function openNewBatchModal() { 
+      updateBottomNotice();
+      document.getElementById('newBatchModal').classList.remove('hidden'); 
+    }
     function closeNewBatchModal() { document.getElementById('newBatchModal').classList.add('hidden'); }
 
     function handleCreateBatch(e) {
       e.preventDefault();
       const newId = `BATCH-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${Math.floor(10 + Math.random() * 90)}`;
+      
+      const feedPhos = document.getElementById('feedPhos').value;
+      const feedFFA = document.getElementById('feedFFA').value;
+      const feedMI = document.getElementById('feedMI').value;
+      const feedOG = document.getElementById('feedOG').value;
+
       batches.unshift({
         id: newId,
         targetTank: document.getElementById('targetTank').value,
         sourceTank: document.getElementById('sourceTank').value,
-        initialSounding: parseInt(document.getElementById('initialSounding').value),
+        rawInitialSounding: parseInt(document.getElementById('initialSounding').value),
         feedTemp: parseInt(document.getElementById('feedTemp').value),
+        feedLab: {
+          phos: feedPhos ? parseFloat(feedPhos) : null,
+          ffa: feedFFA ? parseFloat(feedFFA) : null,
+          mi: feedMI ? parseFloat(feedMI) : null,
+          og: feedOG ? parseFloat(feedOG) : null
+        },
         status: 'INITIAL'
       });
       closeNewBatchModal();
@@ -569,6 +619,11 @@ Tanki: ${b.targetTank} (Asal: ${b.sourceTank})
     }
 
     function openDosingModal(id) {
+      const b = batches.find(x => x.id === id);
+      if (b) {
+        const offset = getTankBottomOffset(b.targetTank);
+        document.getElementById('dosingNotice').innerText = `Akan otomatis ditambah +${offset} mm (Bottom)`;
+      }
       document.getElementById('dosingBatchId').value = id;
       document.getElementById('dosingModal').classList.remove('hidden');
     }
@@ -580,7 +635,7 @@ Tanki: ${b.targetTank} (Asal: ${b.sourceTank})
       if (b) {
         b.caSackCount = parseInt(document.getElementById('caSackCount').value);
         b.waterQty = parseFloat(document.getElementById('waterQty').value);
-        b.soundingAfterDosing = parseInt(document.getElementById('soundingAfterDosing').value);
+        b.rawSoundingAfterDosing = parseInt(document.getElementById('soundingAfterDosing').value);
         b.mixTemp = parseInt(document.getElementById('mixTemp').value);
         b.status = 'SEDIMENTATION';
         closeDosingModal();
@@ -616,9 +671,9 @@ Tanki: ${b.targetTank} (Asal: ${b.sourceTank})
       const filtered = batches.filter(b => b.id.toLowerCase().includes(query) || b.targetTank.toLowerCase().includes(query));
 
       filtered.forEach(b => {
-        const initCalc = calculateExactKg(b.initialSounding, b.feedTemp);
-        const mixCalc = calculateExactKg(b.soundingAfterDosing, b.mixTemp);
-        const drainCalc = calculateExactKg(b.soundingAfterDrain, b.drainTemp);
+        const initCalc = calculateExactKgWithOffset(b.rawInitialSounding, b.feedTemp, b.targetTank);
+        const mixCalc = calculateExactKgWithOffset(b.rawSoundingAfterDosing, b.mixTemp, b.targetTank);
+        const drainCalc = calculateExactKgWithOffset(b.rawSoundingAfterDrain, b.drainTemp, b.targetTank);
         const qtyLossKg = (mixCalc.kg && drainCalc.kg) ? (mixCalc.kg - drainCalc.kg) : '-';
 
         const tr = document.createElement('tr');
@@ -626,12 +681,12 @@ Tanki: ${b.targetTank} (Asal: ${b.sourceTank})
         tr.innerHTML = `
           <td class="p-3 font-mono font-bold">${b.id}</td>
           <td class="p-3 font-bold text-slate-700">${b.targetTank}</td>
-          <td class="p-3">${b.initialSounding} mm<br><span class="text-[10px] text-slate-400">(${initCalc.kg.toLocaleString('id-ID')} Kg @ ${b.feedTemp}°C)</span></td>
+          <td class="p-3">In: ${b.rawInitialSounding} mm ➔ <b>Final: ${initCalc.finalMM} mm</b><br><span class="text-[10px] text-slate-400">(${initCalc.kg.toLocaleString('id-ID')} Kg @ ${b.feedTemp}°C)</span></td>
+          <td class="p-3">${b.feedLab && b.feedLab.phos ? `${b.feedLab.phos} ppm / ${b.feedLab.ffa}%` : '-'}</td>
           <td class="p-3">${b.caSackCount ? b.caSackCount + ' Sack / ' + b.waterQty + ' M³' : '-'}</td>
-          <td class="p-3">${b.soundingAfterDosing ? b.soundingAfterDosing + ' mm<br><span class="text-[10px] text-slate-400">(' + mixCalc.kg.toLocaleString('id-ID') + ' Kg @ ' + b.mixTemp + '°C)</span>' : '-'}</td>
-          <td class="p-3">${b.soundingAfterDrain ? b.soundingAfterDrain + ' mm<br><span class="text-[10px] text-slate-400">(' + drainCalc.kg.toLocaleString('id-ID') + ' Kg @ ' + b.drainTemp + '°C)</span>' : '-'}</td>
+          <td class="p-3">${mixCalc.finalMM ? 'In: ' + b.rawSoundingAfterDosing + ' mm ➔ <b>Final: ' + mixCalc.finalMM + ' mm</b><br><span class="text-[10px] text-slate-400">(' + mixCalc.kg.toLocaleString('id-ID') + ' Kg @ ' + b.mixTemp + '°C)</span>' : '-'}</td>
+          <td class="p-3">${drainCalc.finalMM ? 'In: ' + b.rawSoundingAfterDrain + ' mm ➔ <b>Final: ' + drainCalc.finalMM + ' mm</b><br><span class="text-[10px] text-slate-400">(' + drainCalc.kg.toLocaleString('id-ID') + ' Kg @ ' + b.drainTemp + '°C)</span>' : '-'}</td>
           <td class="p-3 font-extrabold text-red-600">${typeof qtyLossKg === 'number' ? qtyLossKg.toLocaleString('id-ID') + ' Kg' : '-'}</td>
-          <td class="p-3">${b.drainDurationMinutes ? formatDuration(b.drainDurationMinutes) : '-'}</td>
           <td class="p-3">${b.lab ? `${b.lab.phos} ppm / ${b.lab.ffa}%` : '-'}</td>
           <td class="p-3"><span class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-200 text-slate-700">${b.status}</span></td>
           <td class="p-3 text-center">
@@ -650,20 +705,20 @@ Tanki: ${b.targetTank} (Asal: ${b.sourceTank})
     }
 
     function exportToCSV() {
-      let csv = "Batch ID,Target Tank,Source Tank,Sounding Awal (mm),Suhu Feed (C),Awal (Kg),Sack CA,QTY Air (M3),Sounding Campuran (mm),Suhu Campuran (C),Campuran (Kg),Sounding Selesai Drain (mm),Suhu Drain (C),Drain (Kg),QTY Loss Drain (Kg),Lama Drain (Mnt),Phosporus (PPM),FFA (%),M&I (%),OG (PPM),Status\n";
+      let csv = "Batch ID,Target Tank,Source Tank,Input Awal (mm),Offset Bottom (mm),Final Awal (mm),Suhu Feed (C),Awal (Kg),Feed Phos (PPM),Feed FFA (%),Feed M&I (%),Feed OG (PPM),Sack CA,QTY Air (M3),Input Campuran (mm),Final Campuran (mm),Suhu Campuran (C),Campuran (Kg),Input Drain (mm),Final Drain (mm),Suhu Drain (C),Drain (Kg),QTY Loss Drain (Kg),Lama Drain (Mnt),Washing Phos (PPM),Washing FFA (%),Washing M&I (%),Washing OG (PPM),Status\n";
       batches.forEach(b => {
-        const initCalc = calculateExactKg(b.initialSounding, b.feedTemp);
-        const mixCalc = calculateExactKg(b.soundingAfterDosing, b.mixTemp);
-        const drainCalc = calculateExactKg(b.soundingAfterDrain, b.drainTemp);
+        const initCalc = calculateExactKgWithOffset(b.rawInitialSounding, b.feedTemp, b.targetTank);
+        const mixCalc = calculateExactKgWithOffset(b.rawSoundingAfterDosing, b.mixTemp, b.targetTank);
+        const drainCalc = calculateExactKgWithOffset(b.rawSoundingAfterDrain, b.drainTemp, b.targetTank);
         const qtyLossKg = (mixCalc.kg && drainCalc.kg) ? (mixCalc.kg - drainCalc.kg) : 0;
 
-        csv += `"${b.id}","${b.targetTank}","${b.sourceTank}",${b.initialSounding},${b.feedTemp},${initCalc.kg},${b.caSackCount||0},${b.waterQty||0},${b.soundingAfterDosing||0},${b.mixTemp||0},${mixCalc.kg},${b.soundingAfterDrain||0},${b.drainTemp||0},${drainCalc.kg},${qtyLossKg},${b.drainDurationMinutes||0},${b.lab?b.lab.phos:''},${b.lab?b.lab.ffa:''},${b.lab?b.lab.mi:''},${b.lab?b.lab.og:''},"${b.status}"\n`;
+        csv += `"${b.id}","${b.targetTank}","${b.sourceTank}",${b.rawInitialSounding},${initCalc.offset},${initCalc.finalMM},${b.feedTemp},${initCalc.kg},${b.feedLab?b.feedLab.phos:''},${b.feedLab?b.feedLab.ffa:''},${b.feedLab?b.feedLab.mi:''},${b.feedLab?b.feedLab.og:''},${b.caSackCount||0},${b.waterQty||0},${b.rawSoundingAfterDosing||0},${mixCalc.finalMM},${b.mixTemp||0},${mixCalc.kg},${b.rawSoundingAfterDrain||0},${drainCalc.finalMM},${b.drainTemp||0},${drainCalc.kg},${qtyLossKg},${b.drainDurationMinutes||0},${b.lab?b.lab.phos:''},${b.lab?b.lab.ffa:''},${b.lab?b.lab.mi:''},${b.lab?b.lab.og:''},"${b.status}"\n`;
       });
       const blob = new Blob([csv], { type: 'text/csv' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.setAttribute('href', url);
-      a.setAttribute('download', `Washing_Plant_Official_Loss_${new Date().toISOString().slice(0,10)}.csv`);
+      a.setAttribute('download', `Washing_Plant_Report_Feed_and_Loss_${new Date().toISOString().slice(0,10)}.csv`);
       a.click();
     }
 
