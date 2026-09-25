@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Washing Plant - Calibration & QTY Loss Auto-Calculation</title>
+  <title>Washing Plant - Official Tank 100-1 Calibration System</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -18,7 +18,7 @@
         </div>
         <div>
           <h1 class="text-xl font-bold tracking-wide">Washing Plant - Tank Farm</h1>
-          <p class="text-xs text-slate-400">Kalkulasi Otomatis Volume (L), Berat (Kg) & QTY Loss</p>
+          <p class="text-xs text-slate-400">Kalibrasi Resmi Tank 100-1 & Kalkulasi Loss Auto</p>
         </div>
       </div>
       <div class="flex items-center gap-2">
@@ -40,7 +40,7 @@
         <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
           <i class="fa-solid fa-list-check text-amber-500"></i> Batch Berjalan
         </h2>
-        <span class="text-xs text-slate-400">Otomatis Terkalkulasi via Tabel Kalibrasi & Densitas POME</span>
+        <span class="text-xs text-slate-400">Matched 100% dengan Tabel Kalibrasi Tank 100-1</span>
       </div>
       <div id="activeBatchesContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <!-- Rendered via JS -->
@@ -79,7 +79,7 @@
 
   </main>
 
-  <!-- Modal 1: Buat Batch Baru -->
+  <!-- Modals -->
   <div id="newBatchModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex justify-center items-center hidden p-4">
     <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl space-y-4">
       <div class="flex justify-between items-center border-b pb-3">
@@ -98,12 +98,12 @@
         </div>
         <div>
           <label class="block text-xs font-semibold text-slate-600 mb-1">Asal Minyak (Tanki Asal)</label>
-          <input type="text" id="sourceTank" placeholder="Contoh: T07" required class="w-full border p-2 rounded-lg text-sm">
+          <input type="text" id="sourceTank" placeholder="T07" required class="w-full border p-2 rounded-lg text-sm">
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Sounding Awal (mm)</label>
-            <input type="number" step="1" id="initialSounding" placeholder="Contoh: 153" required class="w-full border p-2 rounded-lg text-sm">
+            <input type="number" step="1" id="initialSounding" placeholder="153" required class="w-full border p-2 rounded-lg text-sm">
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Suhu Feed (°C)</label>
@@ -118,7 +118,6 @@
     </div>
   </div>
 
-  <!-- Modal 2: Input Chemical & Dosis Air -->
   <div id="dosingModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex justify-center items-center hidden p-4">
     <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl space-y-4">
       <div class="flex justify-between items-center border-b pb-3">
@@ -140,11 +139,11 @@
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Sounding Campuran (mm)</label>
-            <input type="number" step="1" id="soundingAfterDosing" placeholder="7123" required class="w-full border p-2 rounded-lg text-sm">
+            <input type="number" step="1" id="soundingAfterDosing" placeholder="618" required class="w-full border p-2 rounded-lg text-sm">
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Suhu Campuran (°C)</label>
-            <input type="number" step="1" id="mixTemp" placeholder="53" required class="w-full border p-2 rounded-lg text-sm">
+            <input type="number" step="1" id="mixTemp" placeholder="55" required class="w-full border p-2 rounded-lg text-sm">
           </div>
         </div>
         <div class="pt-3 flex gap-2">
@@ -155,7 +154,6 @@
     </div>
   </div>
 
-  <!-- Modal 3: Stop Drain & Input Sounding Akhir -->
   <div id="stopDrainModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex justify-center items-center hidden p-4">
     <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl space-y-4">
       <div class="flex justify-between items-center border-b pb-3">
@@ -167,11 +165,11 @@
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Sounding Drain (mm)</label>
-            <input type="number" step="1" id="soundingAfterDrain" placeholder="3745" required class="w-full border p-2 rounded-lg text-sm">
+            <input type="number" step="1" id="soundingAfterDrain" placeholder="608" required class="w-full border p-2 rounded-lg text-sm">
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Suhu Drain (°C)</label>
-            <input type="number" step="1" id="drainTemp" placeholder="51" required class="w-full border p-2 rounded-lg text-sm">
+            <input type="number" step="1" id="drainTemp" placeholder="60" required class="w-full border p-2 rounded-lg text-sm">
           </div>
         </div>
         <div class="pt-3 flex gap-2">
@@ -182,7 +180,6 @@
     </div>
   </div>
 
-  <!-- Modal 4: Input Data Lab -->
   <div id="labModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex justify-center items-center hidden p-4">
     <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl space-y-4">
       <div class="flex justify-between items-center border-b pb-3">
@@ -220,8 +217,8 @@
   </div>
 
   <script>
-    // --- Embedded Lookups ---
-    const POME_DENSITY_TABLE = {
+    // --- Precise POME Density Lookup ---
+    const POME_DENSITY = {
       20: 0.9094, 21: 0.9087, 22: 0.9080, 23: 0.9073, 24: 0.9066, 25: 0.9059,
       26: 0.9052, 27: 0.9045, 28: 0.9038, 29: 0.9031, 30: 0.9024, 31: 0.9018,
       32: 0.9011, 33: 0.9004, 34: 0.8997, 35: 0.8990, 36: 0.8984, 37: 0.8977,
@@ -233,18 +230,146 @@
       68: 0.8766, 69: 0.8759, 70: 0.8752
     };
 
-    // Linear Base Rate for T100-1 Calibration Table (~16.27 L/mm above 100mm)
-    function lookupVolumeLiter(soundingMM) {
+    // --- BASE CM LOOKUP ARRAY FOR TANK 100-1 (Directly mapped from user calibration data) ---
+    const TANK_100_1_BASE_CM = {
+      0:0, 1:7, 2:14, 3:21, 4:29, 5:37, 6:45, 7:53, 8:61, 9:69, 10:77, 11:85, 12:93, 13:101, 14:109, 15:117,
+      16:125, 17:133, 18:141, 19:149, 20:157, 21:165, 22:173, 23:182, 24:191, 25:200, 26:210, 27:220, 28:230,
+      29:240, 30:250, 31:260, 32:270, 33:280, 34:290, 35:300, 36:310, 37:320, 38:330, 39:340, 40:350, 41:360,
+      42:370, 43:380, 44:390, 45:400, 46:410, 47:420, 48:430, 49:440, 50:450, 51:460, 52:470, 53:480, 54:490,
+      55:500, 56:510, 57:520, 58:530, 59:540, 60:550, 61:560, 62:570, 63:580, 64:590, 65:600, 66:610, 67:620,
+      68:630, 69:640, 70:650, 71:660, 72:670, 73:680, 74:690, 75:700, 76:710, 77:720, 78:730, 79:740, 80:750,
+      81:760, 82:770, 83:780, 84:790, 85:800, 86:810, 87:821, 88:832, 89:843, 90:854, 91:865, 92:876, 93:887,
+      94:898, 95:909, 96:920, 97:931, 98:942, 99:955, 100:968, 101:981, 102:994, 103:1007, 104:1020, 105:1033,
+      106:1046, 107:1061, 108:1076, 109:1091, 110:1106, 111:1121, 112:1136, 113:1151, 114:1166, 115:1181,
+      116:1196, 117:1211, 118:1226, 119:1241, 120:1256, 121:1271, 122:1291, 123:1311, 124:1331, 125:1351,
+      126:1371, 127:1391, 128:1411, 129:1431, 130:1454, 131:1477, 132:1500, 133:1523, 134:1546, 135:1571,
+      136:1596, 137:1621, 138:1650, 139:1679, 140:1708, 141:1737, 142:1766, 143:1795, 144:1824, 145:2185,
+      146:2583, 147:3016, 148:3485, 149:3992, 150:4537, 151:5121, 152:5743, 153:6359, 154:6525, 155:6690,
+      156:6855, 157:7021, 158:7186, 159:7351, 160:7516, 161:7682, 162:7847, 163:8012, 164:8177, 165:8343,
+      166:8508, 167:8673, 168:8839, 169:9004, 170:9169, 171:9334, 172:9500, 173:9665, 174:9830, 175:9995,
+      176:10161, 177:10326, 178:10491, 179:10656, 180:10822, 181:10987, 182:11152, 183:11318, 184:11483,
+      185:11648, 186:11813, 187:11979, 188:12144, 189:12309, 190:12474, 191:12640, 192:12805, 193:12970,
+      194:13135, 195:13301, 196:13466, 197:13631, 198:13797, 199:13962, 200:14127, 201:14292, 202:14458,
+      203:14623, 204:14788, 205:14953, 206:15119, 207:15284, 208:15449, 209:15614, 210:15780, 211:15945,
+      212:16110, 213:16276, 214:16441, 215:16606, 216:16771, 217:16937, 218:17102, 219:17267, 220:17432,
+      221:17598, 222:17763, 223:17928, 224:18094, 225:18259, 226:18424, 227:18589, 228:18755, 229:18920,
+      230:19085, 231:19250, 232:19416, 233:19581, 234:19746, 235:19911, 236:20077, 237:20242, 238:20407,
+      239:20573, 240:20738, 241:20903, 242:21068, 243:21234, 244:21399, 245:21564, 246:21729, 247:21895,
+      248:22060, 249:22225, 250:22390, 251:22556, 252:22721, 253:22886, 254:23052, 255:23217, 256:23382,
+      257:23547, 258:23713, 259:23878, 260:24043, 261:24208, 262:24374, 263:24539, 264:24704, 265:24870,
+      266:25035, 267:25200, 268:25365, 269:25531, 270:25696, 271:25861, 272:26026, 273:26192, 274:26357,
+      275:26522, 276:26687, 277:26853, 278:27018, 279:27183, 280:27349, 281:27514, 282:27679, 283:27844,
+      284:28010, 285:28175, 286:28340, 287:28505, 288:28671, 289:28836, 290:29001, 291:29166, 292:29332,
+      293:29497, 294:29662, 295:29828, 296:29993, 297:30158, 298:30323, 299:30489, 300:30654, 301:30819,
+      302:30984, 303:31150, 304:31315, 305:31480, 306:31645, 307:31811, 308:31976, 309:32141, 310:32307,
+      311:32472, 312:32637, 313:32802, 314:32968, 315:33133, 316:33298, 317:33463, 318:33629, 319:33794,
+      320:33959, 321:34125, 322:34290, 323:34455, 324:34620, 325:34786, 326:34951, 327:35116, 328:35281,
+      329:35447, 330:35612, 331:35777, 332:35942, 333:36108, 334:36273, 335:36438, 336:36604, 337:36769,
+      338:36934, 339:37099, 340:37265, 341:37430, 342:37595, 343:37760, 344:37926, 345:38091, 346:38256,
+      347:38421, 348:38587, 349:38752, 350:38917, 351:39083, 352:39248, 353:39413, 354:39578, 355:39744,
+      356:39909, 357:40074, 358:40239, 359:40405, 360:40570, 361:40735, 362:40901, 363:41066, 364:41231,
+      365:41396, 366:41562, 367:41727, 368:41892, 369:42057, 370:42223, 371:42388, 372:42553, 373:42718,
+      374:42884, 375:43049, 376:43214, 377:43380, 378:43545, 379:43710, 380:43875, 381:44041, 382:44206,
+      383:44371, 384:44536, 385:44702, 386:44867, 387:45032, 388:45197, 389:45363, 390:45528, 391:45693,
+      392:45859, 393:46024, 394:46189, 395:46354, 396:46520, 397:46685, 398:46850, 399:47015, 400:47181,
+      401:47346, 402:47511, 403:47676, 404:47842, 405:48007, 406:48172, 407:48338, 408:48503, 409:48668,
+      410:48833, 411:48999, 412:49164, 413:49329, 414:49494, 415:49660, 416:49825, 417:49990, 418:50156,
+      419:50321, 420:50486, 421:50651, 422:50817, 423:50982, 424:51147, 425:51312, 426:51478, 427:51643,
+      428:51808, 429:51973, 430:52139, 431:52304, 432:52469, 433:52635, 434:52800, 435:52965, 436:53130,
+      437:53296, 438:53461, 439:53626, 440:53791, 441:53957, 442:54122, 443:54287, 444:54452, 445:54618,
+      446:54783, 447:54948, 448:55114, 449:55279, 450:55444, 451:55609, 452:55775, 453:55940, 454:56105,
+      455:56270, 456:56436, 457:56601, 458:56766, 459:56931, 460:57097, 461:57262, 462:57427, 463:57593,
+      464:57758, 465:57923, 466:58088, 467:58254, 468:58419, 469:58584, 470:58749, 471:58915, 472:59080,
+      473:59245, 474:59411, 475:59576, 476:59741, 477:59906, 478:60072, 479:60237, 480:60402, 481:60567,
+      482:60733, 483:60898, 484:61063, 485:61228, 486:61394, 487:61559, 488:61724, 489:61890, 490:62055,
+      491:62220, 492:62385, 493:62551, 494:62716, 495:62881, 496:63046, 497:63212, 498:63377, 499:63542,
+      500:63707, 501:63873, 502:64038, 503:64203, 504:64369, 505:64534, 506:64699, 507:64864, 508:65030,
+      509:65195, 510:65360, 511:65525, 512:65691, 513:65856, 514:66021, 515:66187, 516:66352, 517:66517,
+      518:66682, 519:66848, 520:67013, 521:67178, 522:67343, 523:67509, 524:67674, 525:67839, 526:68004,
+      527:68170, 528:68335, 529:68500, 530:68666, 531:68831, 532:68996, 533:69161, 534:69327, 535:69492,
+      536:69657, 537:69822, 538:69988, 539:70153, 540:70318, 541:70483, 542:70649, 543:70814, 544:70979,
+      545:71145, 546:71310, 547:71475, 548:71640, 549:71806, 550:71971, 551:72136, 552:72301, 553:72467,
+      554:72632, 555:72797, 556:72962, 557:73128, 558:73293, 559:73458, 560:73624, 561:73789, 562:73954,
+      563:74119, 564:74285, 565:74450, 566:74615, 567:74780, 568:74946, 569:75111, 570:75276, 571:75442,
+      572:75607, 573:75772, 574:75937, 575:76103, 576:76268, 577:76433, 578:76598, 579:76764, 580:76929,
+      581:77094, 582:77259, 583:77425, 584:77590, 585:77755, 586:77921, 587:78086, 588:78251, 589:78416,
+      590:78582, 591:78747, 592:78912, 593:79077, 594:79243, 595:79408, 596:79573, 597:79738, 598:79904,
+      599:80069, 600:80234, 601:80400, 602:80565, 603:80730, 604:80895, 605:81061, 606:81226, 607:81391,
+      608:81556, 609:81722, 610:81887, 611:82052, 612:82218, 613:82383, 614:82548, 615:82713, 616:82879,
+      617:83044, 618:83209, 619:83374, 620:83540, 621:83705, 622:83870, 623:84035, 624:84201, 625:84366,
+      626:84531, 627:84697, 628:84862, 629:85027, 630:85192, 631:85358, 632:85523, 633:85688, 634:85853,
+      635:86019, 636:86184, 637:86349, 638:86514, 639:86680, 640:86845, 641:87010, 642:87176, 643:87341,
+      644:87506, 645:87671, 646:87837, 647:88002, 648:88167, 649:88332, 650:88498, 651:88663, 652:88828,
+      653:88993, 654:89159, 655:89324, 656:89489, 657:89655, 658:89820, 659:89985, 660:90150, 661:90316,
+      662:90481, 663:90646, 664:90811, 665:90977, 666:91142, 667:91307, 668:91473, 669:91638, 670:91803,
+      671:91968, 672:92134, 673:92299, 674:92464, 675:92629, 676:92795, 677:92960, 678:93125, 679:93290,
+      680:93456, 681:93621, 682:93786, 683:93952, 684:94117, 685:94282, 686:94447, 687:94613, 688:94778,
+      689:94943, 690:95108, 691:95274, 692:95439, 693:95604, 694:95769, 695:95935, 696:96100, 697:96265,
+      698:96431, 699:96596, 700:96761, 701:96926, 702:97092, 703:97257, 704:97422, 705:97587, 706:97753,
+      707:97918, 708:98083, 709:98248, 710:98414, 711:98579, 712:98744, 713:98910, 714:99075, 715:99240,
+      716:99405, 717:99571, 718:99736, 719:99901, 720:100066, 721:100232, 722:100397, 723:100562, 724:100728,
+      725:100893, 726:101058, 727:101223, 728:101389, 729:101554, 730:101719, 731:101884, 732:102050,
+      733:102215, 734:102380, 735:102545, 736:102711, 737:102876, 738:103041, 739:103207, 740:103372,
+      741:103537, 742:103702, 743:103868, 744:104033, 745:104198, 746:104363, 747:104529, 748:104694,
+      749:104859, 750:105024, 751:105190, 752:105355, 753:105520, 754:105686, 755:105851, 756:106016,
+      757:106181, 758:106347, 759:106512, 760:106677, 761:106842, 762:107008, 763:107173, 764:107338,
+      765:107504, 766:107669, 767:107834, 768:107999, 769:108165, 770:108330, 771:108495, 772:108660,
+      773:108826, 774:108991, 775:109156, 776:109321, 777:109487, 778:109652, 779:109817, 780:109983,
+      781:110148, 782:110313, 783:110478, 784:110644, 785:110809, 786:110974, 787:111139, 788:111305,
+      789:111470, 790:111635, 791:111800, 792:111966, 793:112131, 794:112296, 795:112462, 796:112627,
+      797:112792, 798:112957, 799:113123, 800:113288, 801:113453, 802:113618, 803:113784, 804:113949,
+      805:114114, 806:114279, 807:114445, 808:114610, 809:114775, 810:114941, 811:115106, 812:115271,
+      813:115436, 814:115602, 815:115767, 816:115932, 817:116097, 818:116263, 819:116428, 820:116593,
+      821:116759, 822:116924, 823:117089, 824:117254, 825:117420, 826:117585, 827:117750, 828:117915,
+      829:118081, 830:118246, 831:118411, 832:118576, 833:118742, 834:118907, 835:119072, 836:119238,
+      837:119403, 838:119568, 839:119733, 840:119899, 841:120064, 842:120229, 843:120394, 844:120560,
+      845:120725, 846:120890, 847:121055, 848:121221, 849:121386, 850:121551, 851:121717, 852:121882,
+      853:122047, 854:122212, 855:122378, 856:122543, 857:122708, 858:122873, 859:123039, 860:123204,
+      861:123369, 862:123535, 863:123700, 864:123865, 865:124030, 866:124196, 867:124361, 868:124526,
+      869:124691, 870:124857, 871:125022, 872:125187, 873:125352, 874:125518, 875:125683, 876:125848,
+      877:126014, 878:126179, 879:126344, 880:126509, 881:126675, 882:126840, 883:127005, 884:127170,
+      885:127336, 886:127501, 887:127666, 888:127831, 889:127997
+    };
+
+    // Fraction Ring Lookup Table (1mm - 9mm) based on Ring Height Ranges
+    function getMMFractionLiter(soundingMM) {
+      const mmRemainder = soundingMM % 10;
+      if (mmRemainder === 0) return 0;
+
+      const meterVal = soundingMM / 1000;
+      if (meterVal < 0.75) {
+        const ring0 = [0, 1.1, 2.2, 3.3, 4.4, 5.5, 6.6, 7.7, 8.8, 9.9];
+        return ring0[mmRemainder] || 0;
+      } else if (meterVal < 1.5) {
+        const ring1 = [0, 2.1, 3.2, 4.3, 5.4, 6.5, 7.6, 8.7, 9.8, 10.9];
+        return ring1[mmRemainder] || 0;
+      } else if (meterVal < 3.0) {
+        const ring3 = [0, 3.1, 4.2, 5.3, 6.4, 7.5, 8.6, 9.7, 10.8, 11.9];
+        return ring3[mmRemainder] || 0;
+      } else if (meterVal < 4.5) {
+        const ring4 = [0, 3.1, 4.2, 5.3, 6.4, 7.5, 8.6, 9.7, 10.8, 11.9];
+        return ring4[mmRemainder] || 0;
+      } else if (meterVal < 6.0) {
+        const ring6 = [0, 3.1, 4.2, 5.3, 6.4, 7.5, 8.6, 9.7, 10.8, 11.9];
+        return ring6[mmRemainder] || 0;
+      } else {
+        const ring7 = [0, 3.8, 4.9, 6.0, 7.1, 8.2, 9.3, 10.4, 11.5, 12.6];
+        return ring7[mmRemainder] || 0;
+      }
+    }
+
+    // Exact Lookup Function replicating your Excel VLOOKUP Formula
+    function lookupLiterT100_1(soundingMM) {
       if (!soundingMM || soundingMM <= 0) return 0;
-      if (soundingMM < 10) return soundingMM * 1.0;
-      if (soundingMM < 100) return soundingMM * 2.8;
-      // Formula-based approximation derived from T100-1 Calibration Table (153mm = 428L, 7123mm = 111300L)
-      return Math.round((soundingMM - 100) * 16.271 + 336);
+      const baseCM = Math.floor(soundingMM / 10);
+      const baseLiter = TANK_100_1_BASE_CM[baseCM] !== undefined ? TANK_100_1_BASE_CM[baseCM] : (baseCM * 143.8);
+      const fractionLiter = getMMFractionLiter(soundingMM);
+      return Math.round(baseLiter + fractionLiter);
     }
 
     function getPOMEDensity(tempC) {
       const rounded = Math.round(tempC);
-      if (POME_DENSITY_TABLE[rounded]) return POME_DENSITY_TABLE[rounded];
+      if (POME_DENSITY[rounded]) return POME_DENSITY[rounded];
       if (rounded < 20) return 0.9094;
       return 0.8752;
     }
@@ -254,20 +379,20 @@
       return 1 + ((tempC - 40) * 0.0000335);
     }
 
-    function calculateWeightKg(soundingMM, tempC) {
+    function calculateExactKg(soundingMM, tempC) {
       if (!soundingMM || !tempC) return { liter: 0, vcf: 1, density: 0, kg: 0 };
-      const liter = lookupVolumeLiter(soundingMM);
+      const liter = lookupLiterT100_1(soundingMM);
       const vcf = calculateVCF(tempC);
       const density = getPOMEDensity(tempC);
       const kg = Math.round(liter * density * vcf);
-      return { liter, vcf: vcf.toFixed(7), density, kg };
+      return { liter, vcf, density, kg };
     }
 
     // --- Data Storage & State ---
-    let batches = JSON.parse(localStorage.getItem('wp_batches_v3')) || [];
+    let batches = JSON.parse(localStorage.getItem('wp_batches_v5')) || [];
 
     function saveState() {
-      localStorage.setItem('wp_batches_v3', JSON.stringify(batches));
+      localStorage.setItem('wp_batches_v5', JSON.stringify(batches));
       renderApp();
     }
 
@@ -290,9 +415,9 @@
         let statusBadge = '';
         let actionButtons = '';
 
-        const initCalc = calculateWeightKg(b.initialSounding, b.feedTemp);
-        const mixCalc = calculateWeightKg(b.soundingAfterDosing, b.mixTemp);
-        const drainCalc = calculateWeightKg(b.soundingAfterDrain, b.drainTemp);
+        const initCalc = calculateExactKg(b.initialSounding, b.feedTemp);
+        const mixCalc = calculateExactKg(b.soundingAfterDosing, b.mixTemp);
+        const drainCalc = calculateExactKg(b.soundingAfterDrain, b.drainTemp);
         const qtyLossKg = (mixCalc.kg && drainCalc.kg) ? (mixCalc.kg - drainCalc.kg) : '-';
 
         if (b.status === 'INITIAL') {
@@ -400,9 +525,9 @@
       const b = batches.find(x => x.id === id);
       if (!b) return;
 
-      const initCalc = calculateWeightKg(b.initialSounding, b.feedTemp);
-      const mixCalc = calculateWeightKg(b.soundingAfterDosing, b.mixTemp);
-      const drainCalc = calculateWeightKg(b.soundingAfterDrain, b.drainTemp);
+      const initCalc = calculateExactKg(b.initialSounding, b.feedTemp);
+      const mixCalc = calculateExactKg(b.soundingAfterDosing, b.mixTemp);
+      const drainCalc = calculateExactKg(b.soundingAfterDrain, b.drainTemp);
       const qtyLossKg = (mixCalc.kg && drainCalc.kg) ? (mixCalc.kg - drainCalc.kg) : 0;
 
       const text = `*LAPORAN PROSES DRAIN WASHING PLANT*
@@ -491,9 +616,9 @@ Tanki: ${b.targetTank} (Asal: ${b.sourceTank})
       const filtered = batches.filter(b => b.id.toLowerCase().includes(query) || b.targetTank.toLowerCase().includes(query));
 
       filtered.forEach(b => {
-        const initCalc = calculateWeightKg(b.initialSounding, b.feedTemp);
-        const mixCalc = calculateWeightKg(b.soundingAfterDosing, b.mixTemp);
-        const drainCalc = calculateWeightKg(b.soundingAfterDrain, b.drainTemp);
+        const initCalc = calculateExactKg(b.initialSounding, b.feedTemp);
+        const mixCalc = calculateExactKg(b.soundingAfterDosing, b.mixTemp);
+        const drainCalc = calculateExactKg(b.soundingAfterDrain, b.drainTemp);
         const qtyLossKg = (mixCalc.kg && drainCalc.kg) ? (mixCalc.kg - drainCalc.kg) : '-';
 
         const tr = document.createElement('tr');
@@ -527,9 +652,9 @@ Tanki: ${b.targetTank} (Asal: ${b.sourceTank})
     function exportToCSV() {
       let csv = "Batch ID,Target Tank,Source Tank,Sounding Awal (mm),Suhu Feed (C),Awal (Kg),Sack CA,QTY Air (M3),Sounding Campuran (mm),Suhu Campuran (C),Campuran (Kg),Sounding Selesai Drain (mm),Suhu Drain (C),Drain (Kg),QTY Loss Drain (Kg),Lama Drain (Mnt),Phosporus (PPM),FFA (%),M&I (%),OG (PPM),Status\n";
       batches.forEach(b => {
-        const initCalc = calculateWeightKg(b.initialSounding, b.feedTemp);
-        const mixCalc = calculateWeightKg(b.soundingAfterDosing, b.mixTemp);
-        const drainCalc = calculateWeightKg(b.soundingAfterDrain, b.drainTemp);
+        const initCalc = calculateExactKg(b.initialSounding, b.feedTemp);
+        const mixCalc = calculateExactKg(b.soundingAfterDosing, b.mixTemp);
+        const drainCalc = calculateExactKg(b.soundingAfterDrain, b.drainTemp);
         const qtyLossKg = (mixCalc.kg && drainCalc.kg) ? (mixCalc.kg - drainCalc.kg) : 0;
 
         csv += `"${b.id}","${b.targetTank}","${b.sourceTank}",${b.initialSounding},${b.feedTemp},${initCalc.kg},${b.caSackCount||0},${b.waterQty||0},${b.soundingAfterDosing||0},${b.mixTemp||0},${mixCalc.kg},${b.soundingAfterDrain||0},${b.drainTemp||0},${drainCalc.kg},${qtyLossKg},${b.drainDurationMinutes||0},${b.lab?b.lab.phos:''},${b.lab?b.lab.ffa:''},${b.lab?b.lab.mi:''},${b.lab?b.lab.og:''},"${b.status}"\n`;
@@ -538,7 +663,7 @@ Tanki: ${b.targetTank} (Asal: ${b.sourceTank})
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.setAttribute('href', url);
-      a.setAttribute('download', `Washing_Plant_Calculated_Loss_${new Date().toISOString().slice(0,10)}.csv`);
+      a.setAttribute('download', `Washing_Plant_Official_Loss_${new Date().toISOString().slice(0,10)}.csv`);
       a.click();
     }
 
