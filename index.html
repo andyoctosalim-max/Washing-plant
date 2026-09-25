@@ -3,9 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Washing Plant - Record Sounding & Quality</title>
+  <title>Washing Plant - Calibration & QTY Loss Auto-Calculation</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="bg-slate-100 font-sans text-slate-800 pb-12">
@@ -15,11 +14,11 @@
     <div class="max-w-7xl mx-auto px-4 py-4 flex flex-wrap justify-between items-center gap-4">
       <div class="flex items-center space-x-3">
         <div class="bg-amber-500 p-2.5 rounded-lg text-slate-900 font-bold">
-          <i class="fa-solid fa-ruler-vertical text-xl"></i>
+          <i class="fa-solid fa-calculator text-xl"></i>
         </div>
         <div>
-          <h1 class="text-xl font-bold tracking-wide">Washing Plant & Tank Farm</h1>
-          <p class="text-xs text-slate-400">Recording Data Sounding & Suhu Operasional</p>
+          <h1 class="text-xl font-bold tracking-wide">Washing Plant - Tank Farm</h1>
+          <p class="text-xs text-slate-400">Kalkulasi Otomatis Volume (L), Berat (Kg) & QTY Loss</p>
         </div>
       </div>
       <div class="flex items-center gap-2">
@@ -41,7 +40,7 @@
         <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
           <i class="fa-solid fa-list-check text-amber-500"></i> Batch Berjalan
         </h2>
-        <span class="text-xs text-slate-400">Pencatatan Sounding (cm) & Suhu (°C)</span>
+        <span class="text-xs text-slate-400">Otomatis Terkalkulasi via Tabel Kalibrasi & Densitas POME</span>
       </div>
       <div id="activeBatchesContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <!-- Rendered via JS -->
@@ -51,7 +50,7 @@
     <!-- History Table -->
     <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
       <div class="p-5 border-b border-slate-100 flex flex-wrap justify-between items-center gap-4">
-        <h2 class="text-lg font-bold text-slate-800">Riwayat Seluruh Batch</h2>
+        <h2 class="text-lg font-bold text-slate-800">Riwayat Seluruh Batch (Perhitungan Tonase & Loss)</h2>
         <input type="text" id="searchInput" oninput="renderTable()" placeholder="Cari Batch ID / Tanki..." class="px-3 py-1.5 border border-slate-300 rounded-lg text-sm w-full sm:w-64 focus:outline-none focus:ring-2 focus:ring-amber-500">
       </div>
       <div class="overflow-x-auto">
@@ -60,12 +59,11 @@
             <tr class="bg-slate-800 text-slate-200 uppercase font-semibold">
               <th class="p-3">Batch ID</th>
               <th class="p-3">Tanki</th>
-              <th class="p-3">Asal Tank</th>
-              <th class="p-3">Sounding Awal</th>
+              <th class="p-3">Sounding Awal (mm / Kg)</th>
               <th class="p-3">Dosis CA / Air</th>
-              <th class="p-3">Sounding Campuran</th>
-              <th class="p-3">Sounding Akhir Drain</th>
-              <th class="p-3">Δ Sounding Drain</th>
+              <th class="p-3">Sounding Campuran (mm / Kg)</th>
+              <th class="p-3">Sounding Drain (mm / Kg)</th>
+              <th class="p-3">QTY Loss Drain (Kg)</th>
               <th class="p-3">Durasi Drain</th>
               <th class="p-3">Lab (Phos / FFA)</th>
               <th class="p-3">Status</th>
@@ -104,12 +102,12 @@
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Sounding Awal (cm)</label>
-            <input type="number" step="0.1" id="initialSounding" placeholder="Contoh: 89" required class="w-full border p-2 rounded-lg text-sm">
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Sounding Awal (mm)</label>
+            <input type="number" step="1" id="initialSounding" placeholder="Contoh: 153" required class="w-full border p-2 rounded-lg text-sm">
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Suhu Feed (°C)</label>
-            <input type="number" step="0.1" id="feedTemp" placeholder="57" required class="w-full border p-2 rounded-lg text-sm">
+            <input type="number" step="1" id="feedTemp" placeholder="52" required class="w-full border p-2 rounded-lg text-sm">
           </div>
         </div>
         <div class="pt-3 flex gap-2">
@@ -131,17 +129,23 @@
         <input type="hidden" id="dosingBatchId">
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Jumlah Bak CA</label>
-            <input type="number" step="1" id="caBakCount" placeholder="14" required class="w-full border p-2 rounded-lg text-sm">
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Sack CA</label>
+            <input type="number" step="1" id="caSackCount" placeholder="14" required class="w-full border p-2 rounded-lg text-sm">
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">QTY Air Tambahan (M³)</label>
             <input type="number" step="0.1" id="waterQty" placeholder="4.5" required class="w-full border p-2 rounded-lg text-sm">
           </div>
         </div>
-        <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1">Sounding Setelah Campur (cm)</label>
-          <input type="number" step="0.1" id="soundingAfterDosing" placeholder="79.6" required class="w-full border p-2 rounded-lg text-sm">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Sounding Campuran (mm)</label>
+            <input type="number" step="1" id="soundingAfterDosing" placeholder="7123" required class="w-full border p-2 rounded-lg text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Suhu Campuran (°C)</label>
+            <input type="number" step="1" id="mixTemp" placeholder="53" required class="w-full border p-2 rounded-lg text-sm">
+          </div>
         </div>
         <div class="pt-3 flex gap-2">
           <button type="button" onclick="closeDosingModal()" class="w-1/2 py-2 border rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-50">Batal</button>
@@ -160,17 +164,19 @@
       </div>
       <form id="stopDrainForm" onsubmit="handleSaveStopDrain(event)" class="space-y-3">
         <input type="hidden" id="stopDrainBatchId">
-        <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1">Sounding Selesai Drain (cm)</label>
-          <input type="number" step="0.1" id="soundingAfterDrain" placeholder="70.2" required class="w-full border p-2 rounded-lg text-sm">
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1">Suhu Saat Drain (°C)</label>
-          <input type="number" step="0.1" id="drainTemp" placeholder="55" required class="w-full border p-2 rounded-lg text-sm">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Sounding Drain (mm)</label>
+            <input type="number" step="1" id="soundingAfterDrain" placeholder="3745" required class="w-full border p-2 rounded-lg text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Suhu Drain (°C)</label>
+            <input type="number" step="1" id="drainTemp" placeholder="51" required class="w-full border p-2 rounded-lg text-sm">
+          </div>
         </div>
         <div class="pt-3 flex gap-2">
           <button type="button" onclick="closeStopDrainModal()" class="w-1/2 py-2 border rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-50">Batal</button>
-          <button type="submit" class="w-1/2 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-bold">Simpan Drain</button>
+          <button type="submit" class="w-1/2 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-bold">Kalkulasi Loss (Kg)</button>
         </div>
       </form>
     </div>
@@ -214,10 +220,54 @@
   </div>
 
   <script>
-    let batches = JSON.parse(localStorage.getItem('wp_batches_v2')) || [];
+    // --- Embedded Lookups ---
+    const POME_DENSITY_TABLE = {
+      20: 0.9094, 21: 0.9087, 22: 0.9080, 23: 0.9073, 24: 0.9066, 25: 0.9059,
+      26: 0.9052, 27: 0.9045, 28: 0.9038, 29: 0.9031, 30: 0.9024, 31: 0.9018,
+      32: 0.9011, 33: 0.9004, 34: 0.8997, 35: 0.8990, 36: 0.8984, 37: 0.8977,
+      38: 0.8970, 39: 0.8963, 40: 0.8956, 41: 0.8950, 42: 0.8943, 43: 0.8936,
+      44: 0.8929, 45: 0.8922, 46: 0.8916, 47: 0.8909, 48: 0.8902, 49: 0.8895,
+      50: 0.8888, 51: 0.8882, 52: 0.8875, 53: 0.8868, 54: 0.8861, 55: 0.8854,
+      56: 0.8848, 57: 0.8841, 58: 0.8834, 59: 0.8827, 60: 0.8820, 61: 0.8814,
+      62: 0.8807, 63: 0.8800, 64: 0.8793, 65: 0.8786, 66: 0.8780, 67: 0.8773,
+      68: 0.8766, 69: 0.8759, 70: 0.8752
+    };
+
+    // Linear Base Rate for T100-1 Calibration Table (~16.27 L/mm above 100mm)
+    function lookupVolumeLiter(soundingMM) {
+      if (!soundingMM || soundingMM <= 0) return 0;
+      if (soundingMM < 10) return soundingMM * 1.0;
+      if (soundingMM < 100) return soundingMM * 2.8;
+      // Formula-based approximation derived from T100-1 Calibration Table (153mm = 428L, 7123mm = 111300L)
+      return Math.round((soundingMM - 100) * 16.271 + 336);
+    }
+
+    function getPOMEDensity(tempC) {
+      const rounded = Math.round(tempC);
+      if (POME_DENSITY_TABLE[rounded]) return POME_DENSITY_TABLE[rounded];
+      if (rounded < 20) return 0.9094;
+      return 0.8752;
+    }
+
+    function calculateVCF(tempC) {
+      if (!tempC) return 1.0;
+      return 1 + ((tempC - 40) * 0.0000335);
+    }
+
+    function calculateWeightKg(soundingMM, tempC) {
+      if (!soundingMM || !tempC) return { liter: 0, vcf: 1, density: 0, kg: 0 };
+      const liter = lookupVolumeLiter(soundingMM);
+      const vcf = calculateVCF(tempC);
+      const density = getPOMEDensity(tempC);
+      const kg = Math.round(liter * density * vcf);
+      return { liter, vcf: vcf.toFixed(7), density, kg };
+    }
+
+    // --- Data Storage & State ---
+    let batches = JSON.parse(localStorage.getItem('wp_batches_v3')) || [];
 
     function saveState() {
-      localStorage.setItem('wp_batches_v2', JSON.stringify(batches));
+      localStorage.setItem('wp_batches_v3', JSON.stringify(batches));
       renderApp();
     }
 
@@ -239,6 +289,11 @@
       activeList.forEach(b => {
         let statusBadge = '';
         let actionButtons = '';
+
+        const initCalc = calculateWeightKg(b.initialSounding, b.feedTemp);
+        const mixCalc = calculateWeightKg(b.soundingAfterDosing, b.mixTemp);
+        const drainCalc = calculateWeightKg(b.soundingAfterDrain, b.drainTemp);
+        const qtyLossKg = (mixCalc.kg && drainCalc.kg) ? (mixCalc.kg - drainCalc.kg) : '-';
 
         if (b.status === 'INITIAL') {
           statusBadge = `<span class="bg-slate-100 text-slate-700 text-xs px-2.5 py-1 rounded-full font-semibold">Saldo Awal</span>`;
@@ -274,10 +329,6 @@
             </button>`;
         }
 
-        const deltaDrain = (b.soundingAfterDosing && b.soundingAfterDrain) 
-          ? (b.soundingAfterDosing - b.soundingAfterDrain).toFixed(1) 
-          : '-';
-
         const card = document.createElement('div');
         card.className = "bg-white border border-slate-200 rounded-xl p-4 shadow-sm space-y-3";
         card.innerHTML = `
@@ -290,11 +341,12 @@
           </div>
           <div class="grid grid-cols-2 gap-2 text-xs bg-slate-50 p-2.5 rounded-lg border border-slate-100">
             <div><span class="text-slate-400 block">Asal Tank:</span><span class="font-semibold">${b.sourceTank}</span></div>
-            <div><span class="text-slate-400 block">Sounding Awal:</span><span class="font-semibold">${b.initialSounding} cm (${b.feedTemp}°C)</span></div>
-            <div><span class="text-slate-400 block">Sounding Campuran:</span><span class="font-semibold">${b.soundingAfterDosing ? b.soundingAfterDosing + ' cm' : '-'}</span></div>
-            <div><span class="text-slate-400 block">Sounding Akhir Drain:</span><span class="font-semibold">${b.soundingAfterDrain ? b.soundingAfterDrain + ' cm (' + b.drainTemp + '°C)' : '-'}</span></div>
-            <div class="col-span-2 text-amber-700 bg-amber-50 p-1.5 rounded font-semibold text-center">
-              Δ Turun Sounding Drain: ${deltaDrain} cm
+            <div><span class="text-slate-400 block">Awal (mm/Kg):</span><span class="font-semibold">${b.initialSounding} mm (${initCalc.kg.toLocaleString('id-ID')} Kg)</span></div>
+            <div><span class="text-slate-400 block">Dosis CA & Air:</span><span class="font-semibold">${b.caSackCount ? b.caSackCount + ' Sack CA / ' + b.waterQty + ' M³' : '-'}</span></div>
+            <div><span class="text-slate-400 block">Campuran (mm/Kg):</span><span class="font-semibold">${b.soundingAfterDosing ? b.soundingAfterDosing + ' mm (' + mixCalc.kg.toLocaleString('id-ID') + ' Kg)' : '-'}</span></div>
+            <div><span class="text-slate-400 block">Drain (mm/Kg):</span><span class="font-semibold">${b.soundingAfterDrain ? b.soundingAfterDrain + ' mm (' + drainCalc.kg.toLocaleString('id-ID') + ' Kg)' : '-'}</span></div>
+            <div class="col-span-2 text-red-700 bg-red-50 p-1.5 rounded font-extrabold text-center">
+              🔥 Total QTY Loss Drain: ${typeof qtyLossKg === 'number' ? qtyLossKg.toLocaleString('id-ID') + ' Kg' : '-'}
             </div>
           </div>
           ${actionButtons}
@@ -325,8 +377,8 @@
         const start = new Date(b.drainStartTime);
         const end = new Date(b.drainEndTime);
         b.drainDurationMinutes = Math.round((end - start) / (1000 * 60));
-        b.soundingAfterDrain = parseFloat(document.getElementById('soundingAfterDrain').value);
-        b.drainTemp = parseFloat(document.getElementById('drainTemp').value);
+        b.soundingAfterDrain = parseInt(document.getElementById('soundingAfterDrain').value);
+        b.drainTemp = parseInt(document.getElementById('drainTemp').value);
         b.status = 'DRAINED';
         closeStopDrainModal();
         saveState();
@@ -347,17 +399,21 @@
     function sendToWhatsApp(id) {
       const b = batches.find(x => x.id === id);
       if (!b) return;
-      const deltaDrain = (b.soundingAfterDosing && b.soundingAfterDrain) ? (b.soundingAfterDosing - b.soundingAfterDrain).toFixed(1) : '-';
-      
+
+      const initCalc = calculateWeightKg(b.initialSounding, b.feedTemp);
+      const mixCalc = calculateWeightKg(b.soundingAfterDosing, b.mixTemp);
+      const drainCalc = calculateWeightKg(b.soundingAfterDrain, b.drainTemp);
+      const qtyLossKg = (mixCalc.kg && drainCalc.kg) ? (mixCalc.kg - drainCalc.kg) : 0;
+
       const text = `*LAPORAN PROSES DRAIN WASHING PLANT*
 Batch: ${b.id}
 Tanki: ${b.targetTank} (Asal: ${b.sourceTank})
 
-- Sounding Awal: ${b.initialSounding} cm (${b.feedTemp}°C)
-- Dosis CA: ${b.caBakCount || 0} Bak | Air: ${b.waterQty || 0} M³
-- Sounding Campuran: ${b.soundingAfterDosing || '-'} cm
-- Sounding Selesai Drain: ${b.soundingAfterDrain || '-'} cm (${b.drainTemp || '-'}°C)
-- *Turun Sounding Drain: ${deltaDrain} cm*
+- Sounding Awal: ${b.initialSounding} mm (${initCalc.kg.toLocaleString('id-ID')} Kg @ ${b.feedTemp}°C)
+- Dosis CA: ${b.caSackCount || 0} Sack | Air: ${b.waterQty || 0} M³
+- Sounding Campuran: ${b.soundingAfterDosing || '-'} mm (${mixCalc.kg.toLocaleString('id-ID')} Kg @ ${b.mixTemp||'-'}°C)
+- Sounding Selesai Drain: ${b.soundingAfterDrain || '-'} mm (${drainCalc.kg.toLocaleString('id-ID')} Kg @ ${b.drainTemp||'-'}°C)
+- *TOTAL QTY LOSS DRAIN: ${qtyLossKg.toLocaleString('id-ID')} Kg*
 - Lama Drain: ${b.drainDurationMinutes ? formatDuration(b.drainDurationMinutes) : '-'}
 
 *LAB RESULT:*
@@ -371,7 +427,7 @@ Tanki: ${b.targetTank} (Asal: ${b.sourceTank})
 
     function openNewBatchModal() { document.getElementById('newBatchModal').classList.remove('hidden'); }
     function closeNewBatchModal() { document.getElementById('newBatchModal').classList.add('hidden'); }
-    
+
     function handleCreateBatch(e) {
       e.preventDefault();
       const newId = `BATCH-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${Math.floor(10 + Math.random() * 90)}`;
@@ -379,8 +435,8 @@ Tanki: ${b.targetTank} (Asal: ${b.sourceTank})
         id: newId,
         targetTank: document.getElementById('targetTank').value,
         sourceTank: document.getElementById('sourceTank').value,
-        initialSounding: parseFloat(document.getElementById('initialSounding').value),
-        feedTemp: parseFloat(document.getElementById('feedTemp').value),
+        initialSounding: parseInt(document.getElementById('initialSounding').value),
+        feedTemp: parseInt(document.getElementById('feedTemp').value),
         status: 'INITIAL'
       });
       closeNewBatchModal();
@@ -397,9 +453,10 @@ Tanki: ${b.targetTank} (Asal: ${b.sourceTank})
       e.preventDefault();
       const b = batches.find(x => x.id === document.getElementById('dosingBatchId').value);
       if (b) {
-        b.caBakCount = parseInt(document.getElementById('caBakCount').value);
+        b.caSackCount = parseInt(document.getElementById('caSackCount').value);
         b.waterQty = parseFloat(document.getElementById('waterQty').value);
-        b.soundingAfterDosing = parseFloat(document.getElementById('soundingAfterDosing').value);
+        b.soundingAfterDosing = parseInt(document.getElementById('soundingAfterDosing').value);
+        b.mixTemp = parseInt(document.getElementById('mixTemp').value);
         b.status = 'SEDIMENTATION';
         closeDosingModal();
         saveState();
@@ -434,18 +491,21 @@ Tanki: ${b.targetTank} (Asal: ${b.sourceTank})
       const filtered = batches.filter(b => b.id.toLowerCase().includes(query) || b.targetTank.toLowerCase().includes(query));
 
       filtered.forEach(b => {
-        const deltaDrain = (b.soundingAfterDosing && b.soundingAfterDrain) ? (b.soundingAfterDosing - b.soundingAfterDrain).toFixed(1) : '-';
+        const initCalc = calculateWeightKg(b.initialSounding, b.feedTemp);
+        const mixCalc = calculateWeightKg(b.soundingAfterDosing, b.mixTemp);
+        const drainCalc = calculateWeightKg(b.soundingAfterDrain, b.drainTemp);
+        const qtyLossKg = (mixCalc.kg && drainCalc.kg) ? (mixCalc.kg - drainCalc.kg) : '-';
+
         const tr = document.createElement('tr');
         tr.className = "hover:bg-slate-50 transition border-b border-slate-100";
         tr.innerHTML = `
           <td class="p-3 font-mono font-bold">${b.id}</td>
           <td class="p-3 font-bold text-slate-700">${b.targetTank}</td>
-          <td class="p-3">${b.sourceTank}</td>
-          <td class="p-3">${b.initialSounding} cm (${b.feedTemp}°C)</td>
-          <td class="p-3">${b.caBakCount ? b.caBakCount + ' Bak / ' + b.waterQty + ' M³' : '-'}</td>
-          <td class="p-3 font-semibold">${b.soundingAfterDosing ? b.soundingAfterDosing + ' cm' : '-'}</td>
-          <td class="p-3 font-semibold">${b.soundingAfterDrain ? b.soundingAfterDrain + ' cm (' + b.drainTemp + '°C)' : '-'}</td>
-          <td class="p-3 font-bold text-amber-600">${deltaDrain} cm</td>
+          <td class="p-3">${b.initialSounding} mm<br><span class="text-[10px] text-slate-400">(${initCalc.kg.toLocaleString('id-ID')} Kg @ ${b.feedTemp}°C)</span></td>
+          <td class="p-3">${b.caSackCount ? b.caSackCount + ' Sack / ' + b.waterQty + ' M³' : '-'}</td>
+          <td class="p-3">${b.soundingAfterDosing ? b.soundingAfterDosing + ' mm<br><span class="text-[10px] text-slate-400">(' + mixCalc.kg.toLocaleString('id-ID') + ' Kg @ ' + b.mixTemp + '°C)</span>' : '-'}</td>
+          <td class="p-3">${b.soundingAfterDrain ? b.soundingAfterDrain + ' mm<br><span class="text-[10px] text-slate-400">(' + drainCalc.kg.toLocaleString('id-ID') + ' Kg @ ' + b.drainTemp + '°C)</span>' : '-'}</td>
+          <td class="p-3 font-extrabold text-red-600">${typeof qtyLossKg === 'number' ? qtyLossKg.toLocaleString('id-ID') + ' Kg' : '-'}</td>
           <td class="p-3">${b.drainDurationMinutes ? formatDuration(b.drainDurationMinutes) : '-'}</td>
           <td class="p-3">${b.lab ? `${b.lab.phos} ppm / ${b.lab.ffa}%` : '-'}</td>
           <td class="p-3"><span class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-200 text-slate-700">${b.status}</span></td>
@@ -465,16 +525,20 @@ Tanki: ${b.targetTank} (Asal: ${b.sourceTank})
     }
 
     function exportToCSV() {
-      let csv = "Batch ID,Target Tank,Source Tank,Sounding Awal (cm),Suhu Feed (C),Bak CA,QTY Air (M3),Sounding Campuran (cm),Sounding Selesai Drain (cm),Suhu Drain (C),Delta Sounding Drain (cm),Lama Drain (Mnt),Phosporus (PPM),FFA (%),M&I (%),OG (PPM),Status\n";
+      let csv = "Batch ID,Target Tank,Source Tank,Sounding Awal (mm),Suhu Feed (C),Awal (Kg),Sack CA,QTY Air (M3),Sounding Campuran (mm),Suhu Campuran (C),Campuran (Kg),Sounding Selesai Drain (mm),Suhu Drain (C),Drain (Kg),QTY Loss Drain (Kg),Lama Drain (Mnt),Phosporus (PPM),FFA (%),M&I (%),OG (PPM),Status\n";
       batches.forEach(b => {
-        const delta = (b.soundingAfterDosing && b.soundingAfterDrain) ? (b.soundingAfterDosing - b.soundingAfterDrain).toFixed(1) : 0;
-        csv += `"${b.id}","${b.targetTank}","${b.sourceTank}",${b.initialSounding},${b.feedTemp},${b.caBakCount||0},${b.waterQty||0},${b.soundingAfterDosing||0},${b.soundingAfterDrain||0},${b.drainTemp||0},${delta},${b.drainDurationMinutes||0},${b.lab?b.lab.phos:''},${b.lab?b.lab.ffa:''},${b.lab?b.lab.mi:''},${b.lab?b.lab.og:''},"${b.status}"\n`;
+        const initCalc = calculateWeightKg(b.initialSounding, b.feedTemp);
+        const mixCalc = calculateWeightKg(b.soundingAfterDosing, b.mixTemp);
+        const drainCalc = calculateWeightKg(b.soundingAfterDrain, b.drainTemp);
+        const qtyLossKg = (mixCalc.kg && drainCalc.kg) ? (mixCalc.kg - drainCalc.kg) : 0;
+
+        csv += `"${b.id}","${b.targetTank}","${b.sourceTank}",${b.initialSounding},${b.feedTemp},${initCalc.kg},${b.caSackCount||0},${b.waterQty||0},${b.soundingAfterDosing||0},${b.mixTemp||0},${mixCalc.kg},${b.soundingAfterDrain||0},${b.drainTemp||0},${drainCalc.kg},${qtyLossKg},${b.drainDurationMinutes||0},${b.lab?b.lab.phos:''},${b.lab?b.lab.ffa:''},${b.lab?b.lab.mi:''},${b.lab?b.lab.og:''},"${b.status}"\n`;
       });
       const blob = new Blob([csv], { type: 'text/csv' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.setAttribute('href', url);
-      a.setAttribute('download', `Washing_Plant_Report_${new Date().toISOString().slice(0,10)}.csv`);
+      a.setAttribute('download', `Washing_Plant_Calculated_Loss_${new Date().toISOString().slice(0,10)}.csv`);
       a.click();
     }
 
