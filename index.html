@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Washing Plant - Multi-Stage Quality & Loss System</title>
+  <title>Washing Plant - Revision & Google Sheets Backup System</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -14,11 +14,11 @@
     <div class="max-w-7xl mx-auto px-4 py-4 flex flex-wrap justify-between items-center gap-4">
       <div class="flex items-center space-x-3">
         <div class="bg-amber-500 p-2.5 rounded-lg text-slate-900 font-bold">
-          <i class="fa-solid fa-calculator text-xl"></i>
+          <i class="fa-solid fa-pen-to-square text-xl"></i>
         </div>
         <div>
           <h1 class="text-xl font-bold tracking-wide">Washing Plant - Tank Farm</h1>
-          <p class="text-xs text-slate-400">Pencatatan Quality Feed Awal & Quality After Washing</p>
+          <p class="text-xs text-slate-400">Fitur Revisi Input & Backup Otomatis Google Sheets</p>
         </div>
       </div>
       <div class="flex items-center gap-2">
@@ -40,7 +40,7 @@
         <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
           <i class="fa-solid fa-list-check text-amber-500"></i> Batch Berjalan
         </h2>
-        <span class="text-xs text-slate-400">Termasuk Quality Awal Minyak Feed</span>
+        <span class="text-xs text-slate-400">Klik "Edit Data" untuk merevisi kesalahan input</span>
       </div>
       <div id="activeBatchesContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <!-- Rendered via JS -->
@@ -50,7 +50,7 @@
     <!-- History Table -->
     <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
       <div class="p-5 border-b border-slate-100 flex flex-wrap justify-between items-center gap-4">
-        <h2 class="text-lg font-bold text-slate-800">Riwayat Seluruh Batch (Quality Awal vs Akhir & Loss)</h2>
+        <h2 class="text-lg font-bold text-slate-800">Riwayat Seluruh Batch</h2>
         <input type="text" id="searchInput" oninput="renderTable()" placeholder="Cari Batch ID / Tanki..." class="px-3 py-1.5 border border-slate-300 rounded-lg text-sm w-full sm:w-64 focus:outline-none focus:ring-2 focus:ring-amber-500">
       </div>
       <div class="overflow-x-auto">
@@ -79,7 +79,113 @@
 
   </main>
 
-  <!-- Modal 1: Buat Batch Baru + Input Quality Feed Awal -->
+  <!-- Modal Edit / Revisi Data Full -->
+  <div id="editBatchModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex justify-center items-center hidden p-4">
+    <div class="bg-white rounded-xl max-w-lg w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
+          <i class="fa-solid fa-pen-to-square text-amber-500"></i> Revisi Data Batch
+        </h3>
+        <button onclick="closeEditModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+      </div>
+      <form id="editBatchForm" onsubmit="handleSaveEdit(event)" class="space-y-4">
+        <input type="hidden" id="editBatchId">
+        
+        <!-- Info Utama -->
+        <div class="grid grid-cols-2 gap-3 bg-slate-50 p-3 rounded-lg border">
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Target Tanki</label>
+            <select id="editTargetTank" class="w-full border p-1.5 rounded text-sm">
+              <option value="T100-1">T100-1 (+153 mm)</option>
+              <option value="T100-2">T100-2 (+153 mm)</option>
+              <option value="T100-3">T100-3 (+140 mm)</option>
+              <option value="T100-4">T100-4 (+140 mm)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-500 mb-1">Asal Minyak</label>
+            <input type="text" id="editSourceTank" class="w-full border p-1.5 rounded text-sm" required>
+          </div>
+        </div>
+
+        <!-- 1. Data Penerimaan Awal -->
+        <div class="border p-3 rounded-lg space-y-2">
+          <span class="text-xs font-bold text-slate-700 block">1. Penerimaan Minyak Mentah (Feed)</span>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[10px] text-slate-500">Input Sounding Awal (mm)</label>
+              <input type="number" id="editRawInitialSounding" class="w-full border p-1.5 rounded text-sm" required>
+            </div>
+            <div>
+              <label class="block text-[10px] text-slate-500">Suhu Feed (°C)</label>
+              <input type="number" id="editFeedTemp" class="w-full border p-1.5 rounded text-sm" required>
+            </div>
+            <div>
+              <label class="block text-[10px] text-slate-500">Feed Phos (PPM)</label>
+              <input type="number" step="0.001" id="editFeedPhos" class="w-full border p-1.5 rounded text-sm">
+            </div>
+            <div>
+              <label class="block text-[10px] text-slate-500">Feed FFA (%)</label>
+              <input type="number" step="0.01" id="editFeedFFA" class="w-full border p-1.5 rounded text-sm">
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Data CA & Air -->
+        <div class="border p-3 rounded-lg space-y-2">
+          <span class="text-xs font-bold text-blue-700 block">2. Dosis Chemical CA & Air</span>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[10px] text-slate-500">Sack CA</label>
+              <input type="number" id="editCaSackCount" class="w-full border p-1.5 rounded text-sm">
+            </div>
+            <div>
+              <label class="block text-[10px] text-slate-500">Air Tambahan (M³)</label>
+              <input type="number" step="0.1" id="editWaterQty" class="w-full border p-1.5 rounded text-sm">
+            </div>
+            <div>
+              <label class="block text-[10px] text-slate-500">Input Sounding Campuran (mm)</label>
+              <input type="number" id="editRawSoundingAfterDosing" class="w-full border p-1.5 rounded text-sm">
+            </div>
+            <div>
+              <label class="block text-[10px] text-slate-500">Suhu Campuran (°C)</label>
+              <input type="number" id="editMixTemp" class="w-full border p-1.5 rounded text-sm">
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Data Drain & Washing -->
+        <div class="border p-3 rounded-lg space-y-2">
+          <span class="text-xs font-bold text-red-700 block">3. Drain & Washing Quality</span>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[10px] text-slate-500">Input Sounding Drain (mm)</label>
+              <input type="number" id="editRawSoundingAfterDrain" class="w-full border p-1.5 rounded text-sm">
+            </div>
+            <div>
+              <label class="block text-[10px] text-slate-500">Suhu Drain (°C)</label>
+              <input type="number" id="editDrainTemp" class="w-full border p-1.5 rounded text-sm">
+            </div>
+            <div>
+              <label class="block text-[10px] text-slate-500">Washing Phos (PPM)</label>
+              <input type="number" step="0.001" id="editLabPhos" class="w-full border p-1.5 rounded text-sm">
+            </div>
+            <div>
+              <label class="block text-[10px] text-slate-500">Washing FFA (%)</label>
+              <input type="number" step="0.01" id="editLabFFA" class="w-full border p-1.5 rounded text-sm">
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-2 flex gap-2">
+          <button type="button" onclick="closeEditModal()" class="w-1/2 py-2 border rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-50">Batal</button>
+          <button type="submit" class="w-1/2 py-2 bg-amber-500 hover:bg-amber-600 text-slate-900 rounded-lg text-sm font-bold">Simpan Revisi</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modals Input Standar -->
   <div id="newBatchModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex justify-center items-center hidden p-4">
     <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b pb-3">
@@ -89,7 +195,7 @@
       <form id="newBatchForm" onsubmit="handleCreateBatch(event)" class="space-y-3">
         <div>
           <label class="block text-xs font-semibold text-slate-600 mb-1">Target Tanki Washing</label>
-          <select id="targetTank" onchange="updateBottomNotice()" class="w-full border p-2 rounded-lg text-sm font-medium focus:ring-2 focus:ring-amber-500">
+          <select id="targetTank" onchange="updateBottomNotice()" class="w-full border p-2 rounded-lg text-sm font-medium">
             <option value="T100-1">T100-1 (+153 mm)</option>
             <option value="T100-2">T100-2 (+153 mm)</option>
             <option value="T100-3">T100-3 (+140 mm)</option>
@@ -97,55 +203,35 @@
           </select>
         </div>
         <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1">Asal Minyak (Tanki Asal)</label>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Asal Minyak</label>
           <input type="text" id="sourceTank" placeholder="T07" required class="w-full border p-2 rounded-lg text-sm">
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Sounding Input (mm)</label>
             <input type="number" step="1" id="initialSounding" placeholder="Misal: 0" required class="w-full border p-2 rounded-lg text-sm">
-            <span class="text-[10px] text-amber-600 font-semibold mt-0.5 block" id="initialNotice">Akan ditambah +153 mm</span>
+            <span class="text-[10px] text-amber-600 font-semibold mt-0.5 block" id="initialNotice">+ Bottom Offset</span>
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Suhu Feed (°C)</label>
             <input type="number" step="1" id="feedTemp" placeholder="52" required class="w-full border p-2 rounded-lg text-sm">
           </div>
         </div>
-
-        <!-- Section Input Quality Feed Awal (Opsional / Awal) -->
         <div class="border-t pt-3 space-y-2">
-          <span class="text-xs font-bold text-indigo-700 block flex items-center gap-1">
-            <i class="fa-solid fa-flask"></i> Quality Minyak Mentah (Sebelum CA & Air)
-          </span>
+          <span class="text-xs font-bold text-indigo-700 block">Quality Feed Awal (Opsional)</span>
           <div class="grid grid-cols-2 gap-2">
-            <div>
-              <label class="block text-[11px] font-semibold text-slate-500">Phosporus (PPM)</label>
-              <input type="number" step="0.001" id="feedPhos" placeholder="Contoh: 25.3" class="w-full border p-1.5 rounded text-sm">
-            </div>
-            <div>
-              <label class="block text-[11px] font-semibold text-slate-500">FFA (%)</label>
-              <input type="number" step="0.01" id="feedFFA" placeholder="Contoh: 5.1" class="w-full border p-1.5 rounded text-sm">
-            </div>
-            <div>
-              <label class="block text-[11px] font-semibold text-slate-500">M&I (%)</label>
-              <input type="number" step="0.01" id="feedMI" placeholder="Contoh: 0.25" class="w-full border p-1.5 rounded text-sm">
-            </div>
-            <div>
-              <label class="block text-[11px] font-semibold text-slate-500">OG (PPM)</label>
-              <input type="number" step="0.1" id="feedOG" placeholder="Contoh: 8.0" class="w-full border p-1.5 rounded text-sm">
-            </div>
+            <input type="number" step="0.001" id="feedPhos" placeholder="Phos (PPM)" class="border p-1.5 rounded text-sm">
+            <input type="number" step="0.01" id="feedFFA" placeholder="FFA (%)" class="border p-1.5 rounded text-sm">
           </div>
         </div>
-
         <div class="pt-3 flex gap-2">
-          <button type="button" onclick="closeNewBatchModal()" class="w-1/2 py-2 border rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-50">Batal</button>
-          <button type="submit" class="w-1/2 py-2 bg-amber-500 hover:bg-amber-600 text-slate-900 rounded-lg text-sm font-bold">Simpan Batch</button>
+          <button type="button" onclick="closeNewBatchModal()" class="w-1/2 py-2 border rounded-lg text-sm font-semibold">Batal</button>
+          <button type="submit" class="w-1/2 py-2 bg-amber-500 text-slate-900 rounded-lg text-sm font-bold">Simpan Batch</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- Modal 2: Input Chemical & Dosis Air -->
   <div id="dosingModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex justify-center items-center hidden p-4">
     <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl space-y-4">
       <div class="flex justify-between items-center border-b pb-3">
@@ -155,35 +241,21 @@
       <form id="dosingForm" onsubmit="handleSaveDosing(event)" class="space-y-3">
         <input type="hidden" id="dosingBatchId">
         <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Sack CA</label>
-            <input type="number" step="1" id="caSackCount" placeholder="14" required class="w-full border p-2 rounded-lg text-sm">
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">QTY Air Tambahan (M³)</label>
-            <input type="number" step="0.1" id="waterQty" placeholder="4.5" required class="w-full border p-2 rounded-lg text-sm">
-          </div>
+          <input type="number" id="caSackCount" placeholder="Sack CA" required class="border p-2 rounded-lg text-sm">
+          <input type="number" step="0.1" id="waterQty" placeholder="Air Tambahan (M³)" required class="border p-2 rounded-lg text-sm">
         </div>
         <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Sounding Campuran (mm)</label>
-            <input type="number" step="1" id="soundingAfterDosing" placeholder="Misal: 6970" required class="w-full border p-2 rounded-lg text-sm">
-            <span class="text-[10px] text-amber-600 font-semibold mt-0.5 block" id="dosingNotice">+ Offset Bottom Tank</span>
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Suhu Campuran (°C)</label>
-            <input type="number" step="1" id="mixTemp" placeholder="53" required class="w-full border p-2 rounded-lg text-sm">
-          </div>
+          <input type="number" id="soundingAfterDosing" placeholder="Sounding Campuran (mm)" required class="border p-2 rounded-lg text-sm">
+          <input type="number" id="mixTemp" placeholder="Suhu Campuran (°C)" required class="border p-2 rounded-lg text-sm">
         </div>
         <div class="pt-3 flex gap-2">
-          <button type="button" onclick="closeDosingModal()" class="w-1/2 py-2 border rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-50">Batal</button>
-          <button type="submit" class="w-1/2 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-bold">Simpan Data</button>
+          <button type="button" onclick="closeDosingModal()" class="w-1/2 py-2 border rounded-lg text-sm font-semibold">Batal</button>
+          <button type="submit" class="w-1/2 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold">Simpan</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- Modal 3: Stop Drain & Input Sounding Akhir -->
   <div id="stopDrainModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex justify-center items-center hidden p-4">
     <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl space-y-4">
       <div class="flex justify-between items-center border-b pb-3">
@@ -193,62 +265,41 @@
       <form id="stopDrainForm" onsubmit="handleSaveStopDrain(event)" class="space-y-3">
         <input type="hidden" id="stopDrainBatchId">
         <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Sounding Drain (mm)</label>
-            <input type="number" step="1" id="soundingAfterDrain" placeholder="Misal: 3605" required class="w-full border p-2 rounded-lg text-sm">
-            <span class="text-[10px] text-amber-600 font-semibold mt-0.5 block" id="drainNotice">+ Offset Bottom Tank</span>
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Suhu Drain (°C)</label>
-            <input type="number" step="1" id="drainTemp" placeholder="51" required class="w-full border p-2 rounded-lg text-sm">
-          </div>
+          <input type="number" id="soundingAfterDrain" placeholder="Sounding Drain (mm)" required class="border p-2 rounded-lg text-sm">
+          <input type="number" id="drainTemp" placeholder="Suhu Drain (°C)" required class="border p-2 rounded-lg text-sm">
         </div>
         <div class="pt-3 flex gap-2">
-          <button type="button" onclick="closeStopDrainModal()" class="w-1/2 py-2 border rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-50">Batal</button>
-          <button type="submit" class="w-1/2 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-bold">Kalkulasi Loss (Kg)</button>
+          <button type="button" onclick="closeStopDrainModal()" class="w-1/2 py-2 border rounded-lg text-sm font-semibold">Batal</button>
+          <button type="submit" class="w-1/2 py-2 bg-red-600 text-white rounded-lg text-sm font-bold">Kalkulasi Loss</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- Modal 4: Input Data Lab Washing Akhir -->
   <div id="labModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex justify-center items-center hidden p-4">
     <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl space-y-4">
       <div class="flex justify-between items-center border-b pb-3">
-        <h3 class="font-bold text-slate-800 text-lg">Input Hasil Lab Washing Akhir</h3>
+        <h3 class="font-bold text-slate-800 text-lg">Input Hasil Lab Washing</h3>
         <button onclick="closeLabModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-xl"></i></button>
       </div>
       <form id="labForm" onsubmit="handleSaveLab(event)" class="space-y-3">
         <input type="hidden" id="labBatchId">
         <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Phosporus (PPM)</label>
-            <input type="number" step="0.001" id="labPhos" placeholder="17.711" required class="w-full border p-2 rounded-lg text-sm">
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">FFA (%)</label>
-            <input type="number" step="0.01" id="labFFA" placeholder="4.5" required class="w-full border p-2 rounded-lg text-sm">
-          </div>
-        </div>
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">M&I (%)</label>
-            <input type="number" step="0.01" id="labMI" placeholder="0.15" required class="w-full border p-2 rounded-lg text-sm">
-          </div>
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">OG (PPM)</label>
-            <input type="number" step="0.1" id="labOG" placeholder="5.0" required class="w-full border p-2 rounded-lg text-sm">
-          </div>
+          <input type="number" step="0.001" id="labPhos" placeholder="Phosporus (PPM)" required class="border p-2 rounded-lg text-sm">
+          <input type="number" step="0.01" id="labFFA" placeholder="FFA (%)" required class="border p-2 rounded-lg text-sm">
         </div>
         <div class="pt-3 flex gap-2">
-          <button type="button" onclick="closeLabModal()" class="w-1/2 py-2 border rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-50">Batal</button>
-          <button type="submit" class="w-1/2 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-bold">Simpan Hasil Lab</button>
+          <button type="button" onclick="closeLabModal()" class="w-1/2 py-2 border rounded-lg text-sm font-semibold">Batal</button>
+          <button type="submit" class="w-1/2 py-2 bg-indigo-600 text-white rounded-lg text-sm font-bold">Simpan</button>
         </div>
       </form>
     </div>
   </div>
 
   <script>
+    // Paste URL Google Apps Script Anda di sini jika ingin backup otomatis ke Google Sheets
+    const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbx6-Nd3BjZls8yR4SlkIeZs_ohH0ajfpga77mHu5uCp5ceWxOJvErPVP5826AxVwhUA/exec";
+
     function getTankBottomOffset(tankName) {
       if (tankName === 'T100-1' || tankName === 'T100-2') return 153;
       if (tankName === 'T100-3' || tankName === 'T100-4') return 140;
@@ -410,16 +461,58 @@
       return { rawMM: rawInputMM, finalMM, offset, liter, vcf, density, kg };
     }
 
-    let batches = JSON.parse(localStorage.getItem('wp_batches_v7')) || [];
+    let batches = JSON.parse(localStorage.getItem('wp_batches_v8')) || [];
 
     function saveState() {
-      localStorage.setItem('wp_batches_v7', JSON.stringify(batches));
+      localStorage.setItem('wp_batches_v8', JSON.stringify(batches));
       renderApp();
     }
 
     function renderApp() {
       renderActiveBatches();
       renderTable();
+    }
+
+    // --- Google Sheets Auto Backup Webhook ---
+    function syncToGoogleSheets(batchData) {
+      if (!GOOGLE_SHEET_URL) return;
+      const initCalc = calculateExactKgWithOffset(batchData.rawInitialSounding, batchData.feedTemp, batchData.targetTank);
+      const mixCalc = calculateExactKgWithOffset(batchData.rawSoundingAfterDosing, batchData.mixTemp, batchData.targetTank);
+      const drainCalc = calculateExactKgWithOffset(batchData.rawSoundingAfterDrain, batchData.drainTemp, batchData.targetTank);
+      const qtyLossKg = (mixCalc.kg && drainCalc.kg) ? (mixCalc.kg - drainCalc.kg) : 0;
+
+      const payload = {
+        id: batchData.id,
+        targetTank: batchData.targetTank,
+        sourceTank: batchData.sourceTank,
+        rawInitialSounding: batchData.rawInitialSounding,
+        initFinalMM: initCalc.finalMM,
+        feedTemp: batchData.feedTemp,
+        initKg: initCalc.kg,
+        feedPhos: batchData.feedLab ? batchData.feedLab.phos : '',
+        feedFFA: batchData.feedLab ? batchData.feedLab.ffa : '',
+        caSackCount: batchData.caSackCount || 0,
+        waterQty: batchData.waterQty || 0,
+        rawSoundingAfterDosing: batchData.rawSoundingAfterDosing || 0,
+        mixFinalMM: mixCalc.finalMM,
+        mixTemp: batchData.mixTemp || 0,
+        mixKg: mixCalc.kg,
+        rawSoundingAfterDrain: batchData.rawSoundingAfterDrain || 0,
+        drainFinalMM: drainCalc.finalMM,
+        drainTemp: batchData.drainTemp || 0,
+        drainKg: drainCalc.kg,
+        qtyLossKg: qtyLossKg,
+        washingPhos: batchData.lab ? batchData.lab.phos : '',
+        washingFFA: batchData.lab ? batchData.lab.ffa : '',
+        status: batchData.status
+      };
+
+      fetch(GOOGLE_SHEET_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      }).catch(err => console.log("Sheet Sync Error:", err));
     }
 
     function renderActiveBatches() {
@@ -483,7 +576,12 @@
               <span class="text-xs font-mono font-bold text-slate-400">${b.id}</span>
               <h3 class="text-lg font-extrabold text-slate-800">${b.targetTank}</h3>
             </div>
-            ${statusBadge}
+            <div class="flex items-center gap-1">
+              ${statusBadge}
+              <button onclick="openEditModal('${b.id}')" title="Edit / Revisi Data" class="text-amber-600 hover:text-amber-800 p-1 rounded bg-amber-50 border border-amber-200 text-xs">
+                <i class="fa-solid fa-pen-to-square"></i>
+              </button>
+            </div>
           </div>
           <div class="grid grid-cols-2 gap-2 text-xs bg-slate-50 p-2.5 rounded-lg border border-slate-100">
             <div><span class="text-slate-400 block">Asal Tank:</span><span class="font-semibold">${b.sourceTank}</span></div>
@@ -503,21 +601,91 @@
       });
     }
 
+    // --- Modal Edit / Revisi Full ---
+    function openEditModal(batchId) {
+      const b = batches.find(x => x.id === batchId);
+      if (!b) return;
+
+      document.getElementById('editBatchId').value = b.id;
+      document.getElementById('editTargetTank').value = b.targetTank;
+      document.getElementById('editSourceTank').value = b.sourceTank;
+      document.getElementById('editRawInitialSounding').value = b.rawInitialSounding || '';
+      document.getElementById('editFeedTemp').value = b.feedTemp || '';
+      document.getElementById('editFeedPhos').value = b.feedLab ? b.feedLab.phos || '' : '';
+      document.getElementById('editFeedFFA').value = b.feedLab ? b.feedLab.ffa || '' : '';
+
+      document.getElementById('editCaSackCount').value = b.caSackCount || '';
+      document.getElementById('editWaterQty').value = b.waterQty || '';
+      document.getElementById('editRawSoundingAfterDosing').value = b.rawSoundingAfterDosing || '';
+      document.getElementById('editMixTemp').value = b.mixTemp || '';
+
+      document.getElementById('editRawSoundingAfterDrain').value = b.rawSoundingAfterDrain || '';
+      document.getElementById('editDrainTemp').value = b.drainTemp || '';
+      document.getElementById('editLabPhos').value = b.lab ? b.lab.phos || '' : '';
+      document.getElementById('editLabFFA').value = b.lab ? b.lab.ffa || '' : '';
+
+      document.getElementById('editBatchModal').classList.remove('hidden');
+    }
+
+    function closeEditModal() { document.getElementById('editBatchModal').classList.add('hidden'); }
+
+    function handleSaveEdit(e) {
+      e.preventDefault();
+      const id = document.getElementById('editBatchId').value;
+      const b = batches.find(x => x.id === id);
+      if (b) {
+        b.targetTank = document.getElementById('editTargetTank').value;
+        b.sourceTank = document.getElementById('editSourceTank').value;
+        b.rawInitialSounding = parseInt(document.getElementById('editRawInitialSounding').value);
+        b.feedTemp = parseInt(document.getElementById('editFeedTemp').value);
+
+        const feedPhos = document.getElementById('editFeedPhos').value;
+        const feedFFA = document.getElementById('editFeedFFA').value;
+        b.feedLab = {
+          phos: feedPhos ? parseFloat(feedPhos) : null,
+          ffa: feedFFA ? parseFloat(feedFFA) : null
+        };
+
+        const caSack = document.getElementById('editCaSackCount').value;
+        if (caSack) b.caSackCount = parseInt(caSack);
+        const water = document.getElementById('editWaterQty').value;
+        if (water) b.waterQty = parseFloat(water);
+        const rawMix = document.getElementById('editRawSoundingAfterDosing').value;
+        if (rawMix) b.rawSoundingAfterDosing = parseInt(rawMix);
+        const mixT = document.getElementById('editMixTemp').value;
+        if (mixT) b.mixTemp = parseInt(mixT);
+
+        const rawDrain = document.getElementById('editRawSoundingAfterDrain').value;
+        if (rawDrain) b.rawSoundingAfterDrain = parseInt(rawDrain);
+        const drainT = document.getElementById('editDrainTemp').value;
+        if (drainT) b.drainTemp = parseInt(drainT);
+
+        const labPhos = document.getElementById('editLabPhos').value;
+        const labFFA = document.getElementById('editLabFFA').value;
+        if (labPhos || labFFA) {
+          b.lab = {
+            phos: labPhos ? parseFloat(labPhos) : null,
+            ffa: labFFA ? parseFloat(labFFA) : null
+          };
+        }
+
+        closeEditModal();
+        saveState();
+        syncToGoogleSheets(b);
+      }
+    }
+
     function startDrain(batchId) {
       const b = batches.find(x => x.id === batchId);
       if (b) {
         b.drainStartTime = new Date().toISOString();
         b.status = 'DRAINING';
         saveState();
+        syncToGoogleSheets(b);
       }
     }
 
     function openStopDrainModal(batchId) {
-      const b = batches.find(x => x.id === batchId);
-      if (b) {
-        const offset = getTankBottomOffset(b.targetTank);
-        document.getElementById('drainNotice').innerText = `Akan otomatis ditambah +${offset} mm (Bottom)`;
-      }
       document.getElementById('stopDrainBatchId').value = batchId;
       document.getElementById('stopDrainModal').classList.remove('hidden');
     }
@@ -535,6 +703,7 @@
         b.status = 'DRAINED';
         closeStopDrainModal();
         saveState();
+        syncToGoogleSheets(b);
       }
     }
 
@@ -546,7 +715,11 @@
 
     function completeBatch(id) {
       const b = batches.find(x => x.id === id);
-      if (b) { b.status = 'COMPLETED'; saveState(); }
+      if (b) { 
+        b.status = 'COMPLETED'; 
+        saveState(); 
+        syncToGoogleSheets(b);
+      }
     }
 
     function sendToWhatsApp(id) {
@@ -572,9 +745,7 @@ Tanki: ${b.targetTank} (Asal: ${b.sourceTank})
 
 *LAB RESULT AFTER WASHING:*
 - Phosporus: ${b.lab ? b.lab.phos + ' PPM' : '-'}
-- FFA: ${b.lab ? b.lab.ffa + ' %' : '-'}
-- M&I: ${b.lab ? b.lab.mi + ' %' : '-'}
-- OG: ${b.lab ? b.lab.og + ' PPM' : '-'}`;
+- FFA: ${b.lab ? b.lab.ffa + ' %' : '-'}`;
 
       window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
     }
@@ -594,13 +765,10 @@ Tanki: ${b.targetTank} (Asal: ${b.sourceTank})
     function handleCreateBatch(e) {
       e.preventDefault();
       const newId = `BATCH-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${Math.floor(10 + Math.random() * 90)}`;
-      
       const feedPhos = document.getElementById('feedPhos').value;
       const feedFFA = document.getElementById('feedFFA').value;
-      const feedMI = document.getElementById('feedMI').value;
-      const feedOG = document.getElementById('feedOG').value;
 
-      batches.unshift({
+      const newBatch = {
         id: newId,
         targetTank: document.getElementById('targetTank').value,
         sourceTank: document.getElementById('sourceTank').value,
@@ -608,22 +776,18 @@ Tanki: ${b.targetTank} (Asal: ${b.sourceTank})
         feedTemp: parseInt(document.getElementById('feedTemp').value),
         feedLab: {
           phos: feedPhos ? parseFloat(feedPhos) : null,
-          ffa: feedFFA ? parseFloat(feedFFA) : null,
-          mi: feedMI ? parseFloat(feedMI) : null,
-          og: feedOG ? parseFloat(feedOG) : null
+          ffa: feedFFA ? parseFloat(feedFFA) : null
         },
         status: 'INITIAL'
-      });
+      };
+
+      batches.unshift(newBatch);
       closeNewBatchModal();
       saveState();
+      syncToGoogleSheets(newBatch);
     }
 
     function openDosingModal(id) {
-      const b = batches.find(x => x.id === id);
-      if (b) {
-        const offset = getTankBottomOffset(b.targetTank);
-        document.getElementById('dosingNotice').innerText = `Akan otomatis ditambah +${offset} mm (Bottom)`;
-      }
       document.getElementById('dosingBatchId').value = id;
       document.getElementById('dosingModal').classList.remove('hidden');
     }
@@ -640,6 +804,7 @@ Tanki: ${b.targetTank} (Asal: ${b.sourceTank})
         b.status = 'SEDIMENTATION';
         closeDosingModal();
         saveState();
+        syncToGoogleSheets(b);
       }
     }
 
@@ -653,13 +818,12 @@ Tanki: ${b.targetTank} (Asal: ${b.sourceTank})
       if (b) {
         b.lab = {
           phos: parseFloat(document.getElementById('labPhos').value),
-          ffa: parseFloat(document.getElementById('labFFA').value),
-          mi: parseFloat(document.getElementById('labMI').value),
-          og: parseFloat(document.getElementById('labOG').value)
+          ffa: parseFloat(document.getElementById('labFFA').value)
         };
         b.status = 'READY_TRANSFER';
         closeLabModal();
         saveState();
+        syncToGoogleSheets(b);
       }
     }
 
@@ -689,8 +853,9 @@ Tanki: ${b.targetTank} (Asal: ${b.sourceTank})
           <td class="p-3 font-extrabold text-red-600">${typeof qtyLossKg === 'number' ? qtyLossKg.toLocaleString('id-ID') + ' Kg' : '-'}</td>
           <td class="p-3">${b.lab ? `${b.lab.phos} ppm / ${b.lab.ffa}%` : '-'}</td>
           <td class="p-3"><span class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-200 text-slate-700">${b.status}</span></td>
-          <td class="p-3 text-center">
-            <button onclick="deleteBatch('${b.id}')" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>
+          <td class="p-3 text-center space-x-1">
+            <button onclick="openEditModal('${b.id}')" class="text-amber-600 hover:text-amber-800" title="Edit Data"><i class="fa-solid fa-pen-to-square"></i></button>
+            <button onclick="deleteBatch('${b.id}')" class="text-red-500 hover:text-red-700" title="Hapus Data"><i class="fa-solid fa-trash"></i></button>
           </td>
         `;
         tbody.appendChild(tr);
@@ -705,20 +870,20 @@ Tanki: ${b.targetTank} (Asal: ${b.sourceTank})
     }
 
     function exportToCSV() {
-      let csv = "Batch ID,Target Tank,Source Tank,Input Awal (mm),Offset Bottom (mm),Final Awal (mm),Suhu Feed (C),Awal (Kg),Feed Phos (PPM),Feed FFA (%),Feed M&I (%),Feed OG (PPM),Sack CA,QTY Air (M3),Input Campuran (mm),Final Campuran (mm),Suhu Campuran (C),Campuran (Kg),Input Drain (mm),Final Drain (mm),Suhu Drain (C),Drain (Kg),QTY Loss Drain (Kg),Lama Drain (Mnt),Washing Phos (PPM),Washing FFA (%),Washing M&I (%),Washing OG (PPM),Status\n";
+      let csv = "Batch ID,Target Tank,Source Tank,Input Awal (mm),Offset Bottom (mm),Final Awal (mm),Suhu Feed (C),Awal (Kg),Feed Phos (PPM),Feed FFA (%),Sack CA,QTY Air (M3),Input Campuran (mm),Final Campuran (mm),Suhu Campuran (C),Campuran (Kg),Input Drain (mm),Final Drain (mm),Suhu Drain (C),Drain (Kg),QTY Loss Drain (Kg),Lama Drain (Mnt),Washing Phos (PPM),Washing FFA (%),Status\n";
       batches.forEach(b => {
         const initCalc = calculateExactKgWithOffset(b.rawInitialSounding, b.feedTemp, b.targetTank);
         const mixCalc = calculateExactKgWithOffset(b.rawSoundingAfterDosing, b.mixTemp, b.targetTank);
         const drainCalc = calculateExactKgWithOffset(b.rawSoundingAfterDrain, b.drainTemp, b.targetTank);
         const qtyLossKg = (mixCalc.kg && drainCalc.kg) ? (mixCalc.kg - drainCalc.kg) : 0;
 
-        csv += `"${b.id}","${b.targetTank}","${b.sourceTank}",${b.rawInitialSounding},${initCalc.offset},${initCalc.finalMM},${b.feedTemp},${initCalc.kg},${b.feedLab?b.feedLab.phos:''},${b.feedLab?b.feedLab.ffa:''},${b.feedLab?b.feedLab.mi:''},${b.feedLab?b.feedLab.og:''},${b.caSackCount||0},${b.waterQty||0},${b.rawSoundingAfterDosing||0},${mixCalc.finalMM},${b.mixTemp||0},${mixCalc.kg},${b.rawSoundingAfterDrain||0},${drainCalc.finalMM},${b.drainTemp||0},${drainCalc.kg},${qtyLossKg},${b.drainDurationMinutes||0},${b.lab?b.lab.phos:''},${b.lab?b.lab.ffa:''},${b.lab?b.lab.mi:''},${b.lab?b.lab.og:''},"${b.status}"\n`;
+        csv += `"${b.id}","${b.targetTank}","${b.sourceTank}",${b.rawInitialSounding},${initCalc.offset},${initCalc.finalMM},${b.feedTemp},${initCalc.kg},${b.feedLab?b.feedLab.phos:''},${b.feedLab?b.feedLab.ffa:''},${b.caSackCount||0},${b.waterQty||0},${b.rawSoundingAfterDosing||0},${mixCalc.finalMM},${b.mixTemp||0},${mixCalc.kg},${b.rawSoundingAfterDrain||0},${drainCalc.finalMM},${b.drainTemp||0},${drainCalc.kg},${qtyLossKg},${b.drainDurationMinutes||0},${b.lab?b.lab.phos:''},${b.lab?b.lab.ffa:''},"${b.status}"\n`;
       });
       const blob = new Blob([csv], { type: 'text/csv' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.setAttribute('href', url);
-      a.setAttribute('download', `Washing_Plant_Report_Feed_and_Loss_${new Date().toISOString().slice(0,10)}.csv`);
+      a.setAttribute('download', `Washing_Plant_With_Edit_and_Backup_${new Date().toISOString().slice(0,10)}.csv`);
       a.click();
     }
 
