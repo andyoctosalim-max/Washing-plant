@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Washing Plant & Tank Farm Monitoring System</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- FontAwesome CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-100 font-sans text-slate-800 pb-12">
+
+  <!-- Header / Navigation -->
+  <header class="bg-slate-900 text-white shadow-lg sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex flex-wrap justify-between items-center gap-4">
+      <div class="flex items-center space-x-3">
+        <div class="bg-amber-500 p-2.5 rounded-lg text-slate-900 font-bold">
+          <i class="fa-solid fa-industry text-xl"></i>
+        </div>
+        <div>
+          <h1 class="text-xl font-bold tracking-wide">Washing Plant & Tank Farm</h1>
+          <p class="text-xs text-slate-400">Monitoring Process & Quality Control System</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="exportToCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2">
+          <i class="fa-solid fa-file-excel"></i> Export Excel
+        </button>
+        <button onclick="openNewBatchModal()" class="bg-amber-500 hover:bg-amber-600 text-slate-900 px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-2 shadow-md">
+          <i class="fa-solid fa-plus"></i> Batch Baru
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 mt-6 space-y-6">
+
+    <!-- KPI Summary Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex items-center gap-4">
+        <div class="p-3 bg-blue-100 text-blue-600 rounded-lg">
+          <i class="fa-solid fa-vials text-2xl"></i>
+        </div>
+        <div>
+          <p class="text-xs text-slate-500 font-medium">Total Batch Aktif</p>
+          <h3 class="text-2xl font-bold text-slate-800" id="kpiActiveBatches">0</h3>
+        </div>
+      </div>
+      <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex items-center gap-4">
+        <div class="p-3 bg-amber-100 text-amber-600 rounded-lg">
+          <i class="fa-solid fa-[#f59e0b] fa-faucet-drip text-2xl"></i>
+        </div>
+        <div>
+          <p class="text-xs text-slate-500 font-medium">Sedang Proses Drain</p>
+          <h3 class="text-2xl font-bold text-amber-600" id="kpiDrainingBatches">0</h3>
+        </div>
+      </div>
+      <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex items-center gap-4">
+        <div class="p-3 bg-indigo-100 text-indigo-600 rounded-lg">
+          <i class="fa-solid fa-[#6366f1] fa-vial text-2xl"></i>
+        </div>
+        <div>
+          <p class="text-xs text-slate-500 font-medium">Rata-rata Phosporus</p>
+          <h3 class="text-2xl font-bold text-slate-800" id="kpiAvgPhos">0 ppm</h3>
+        </div>
+      </div>
+      <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex items-center gap-4">
+        <div class="p-3 bg-emerald-100 text-emerald-600 rounded-lg">
+          <i class="fa-solid fa-[#10b981] fa-truck-droplet text-2xl"></i>
+        </div>
+        <div>
+          <p class="text-xs text-slate-500 font-medium">Ready Transfer</p>
+          <h3 class="text-2xl font-bold text-emerald-600" id="kpiReadyTransfer">0 Batch</h3>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Batches Section -->
+    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+          <i class="fa-solid fa-list-check text-amber-500"></i> Daftar Batch Berjalan
+        </h2>
+        <span class="text-xs text-slate-400">Otomatis mencatat timestamp saat Start/Stop Drain</span>
+      </div>
+      <div id="activeBatchesContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- Rendered via JavaScript -->
+      </div>
+    </div>
+
+    <!-- Analytics Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+        <h3 class="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
+          <i class="fa-solid fa-chart-simple text-blue-500"></i> Perbandingan Volume Sounding (M³)
+        </h3>
+        <div class="relative h-64">
+          <canvas id="soundingChart"></canvas>
+        </div>
+      </div>
+      <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
+        <h3 class="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
+          <i class="fa-solid fa-flask-vial text-purple-500"></i> Tren Kualitas Lab (Phosporus & FFA)
+        </h3>
+        <div class="relative h-64">
+          <canvas id="labChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- All History Table -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+      <div class="p-5 border-b border-slate-100 flex flex-wrap justify-between items-center gap-4">
+        <h2 class="text-lg font-bold text-slate-800">Riwayat Seluruh Batch</h2>
+        <input type="text" id="searchInput" oninput="renderTable()" placeholder="Cari Batch ID / Tanki..." class="px-3 py-1.5 border border-slate-300 rounded-lg text-sm w-full sm:w-64 focus:outline-none focus:ring-2 focus:ring-amber-500">
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-xs">
+          <thead>
+            <tr class="bg-slate-800 text-slate-200 uppercase font-semibold">
+              <th class="p-3">Batch ID</th>
+              <th class="p-3">Tanki</th>
+              <th class="p-3">Asal Tank</th>
+              <th class="p-3">Sounding Awal</th>
+              <th class="p-3">Dosis CA & Air</th>
+              <th class="p-3">Durasi Drain</th>
+              <th class="p-3">QTY Drain</th>
+              <th class="p-3">Lab (Phos / FFA)</th>
+              <th class="p-3">Status</th>
+              <th class="p-3 text-center">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="historyTableBody" class="divide-y divide-slate-100">
+            <!-- Rendered via JavaScript -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Modal 1: Buat Batch Baru -->
+  <div id="newBatchModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex justify-center items-center hidden p-4">
+    <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl space-y-4">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-slate-800 text-lg">Buat Batch Baru (Penerimaan)</h3>
+        <button onclick="closeNewBatchModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+      </div>
+      <form id="newBatchForm" onsubmit="handleCreateBatch(event)" class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Target Tanki Washing</label>
+          <select id="targetTank" class="w-full border p-2 rounded-lg text-sm font-medium focus:ring-2 focus:ring-amber-500">
+            <option value="T100-1">T100-1</option>
+            <option value="T100-2">T100-2</option>
+            <option value="T100-3">T100-3</option>
+            <option value="T100-4">T100-4</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Asal Minyak (Tanki Asal)</label>
+          <input type="text" id="sourceTank" placeholder="Contoh: Tank Farm 03 / Feed Tank" required class="w-full border p-2 rounded-lg text-sm">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Sounding Awal (M³)</label>
+            <input type="number" step="0.1" id="initialSounding" placeholder="0.0" required class="w-full border p-2 rounded-lg text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Suhu Feed (°C)</label>
+            <input type="number" step="0.1" id="feedTemp" placeholder="57" required class="w-full border p-2 rounded-lg text-sm">
+          </div>
+        </div>
+        <div class="pt-3 flex gap-2">
+          <button type="button" onclick="closeNewBatchModal()" class="w-1/2 py-2 border rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-50">Batal</button>
+          <button type="submit" class="w-1/2 py-2 bg-amber-500 hover:bg-amber-600 text-slate-900 rounded-lg text-sm font-bold">Simpan Batch</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 2: Input Chemical & Dosis Air (Tahap 3) -->
+  <div id="dosingModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex justify-center items-center hidden p-4">
+    <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl space-y-4">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-slate-800 text-lg">Input Dosis CA & Air</h3>
+        <button onclick="closeDosingModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+      </div>
+      <form id="dosingForm" onsubmit="handleSaveDosing(event)" class="space-y-3">
+        <input type="hidden" id="dosingBatchId">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Jumlah Bak CA</label>
+            <input type="number" step="1" id="caBakCount" placeholder="Contoh: 2" required class="w-full border p-2 rounded-lg text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">QTY Air Tambahan (M³)</label>
+            <input type="number" step="0.1" id="waterQty" placeholder="Contoh: 5.0" required class="w-full border p-2 rounded-lg text-sm">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Sounding Setelah Campur (M³)</label>
+          <input type="number" step="0.1" id="soundingAfterDosing" placeholder="0.0" required class="w-full border p-2 rounded-lg text-sm">
+        </div>
+        <div class="pt-3 flex gap-2">
+          <button type="button" onclick="closeDosingModal()" class="w-1/2 py-2 border rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-50">Batal</button>
+          <button type="submit" class="w-1/2 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-bold">Simpan Dosis</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 3: Stop Drain & Input Sounding Akhir -->
+  <div id="stopDrainModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex justify-center items-center hidden p-4">
+    <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl space-y-4">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-slate-800 text-lg">Stop Drain & Sounding Akhir</h3>
+        <button onclick="closeStopDrainModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+      </div>
+      <form id="stopDrainForm" onsubmit="handleSaveStopDrain(event)" class="space-y-3">
+        <input type="hidden" id="stopDrainBatchId">
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Sounding Selesai Drain (M³)</label>
+          <input type="number" step="0.1" id="soundingAfterDrain" placeholder="0.0" required class="w-full border p-2 rounded-lg text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Suhu Saat Drain (°C)</label>
+          <input type="number" step="0.1" id="drainTemp" placeholder="55" required class="w-full border p-2 rounded-lg text-sm">
+        </div>
+        <div class="pt-3 flex gap-2">
+          <button type="button" onclick="closeStopDrainModal()" class="w-1/2 py-2 border rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-50">Batal</button>
+          <button type="submit" class="w-1/2 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-bold">Proses Kalkulasi</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 4: Input Data Lab (Team Lab) -->
+  <div id="labModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex justify-center items-center hidden p-4">
+    <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl space-y-4">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="font-bold text-slate-800 text-lg">Input Hasil Laboratorium</h3>
+        <button onclick="closeLabModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+      </div>
+      <form id="labForm" onsubmit="handleSaveLab(event)" class="space-y-3">
+        <input type="hidden" id="labBatchId">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Phosporus (PPM)</label>
+            <input type="number" step="0.001" id="labPhos" placeholder="Contoh: 17.711" required class="w-full border p-2 rounded-lg text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">FFA (%)</label>
+            <input type="number" step="0.01" id="labFFA" placeholder="Contoh: 4.5" required class="w-full border p-2 rounded-lg text-sm">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">M&I (%)</label>
+            <input type="number" step="0.01" id="labMI" placeholder="Contoh: 0.15" required class="w-full border p-2 rounded-lg text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">OG (PPM)</label>
+            <input type="number" step="0.1" id="labOG" placeholder="Contoh: 5.0" required class="w-full border p-2 rounded-lg text-sm">
+          </div>
+        </div>
+        <div class="pt-3 flex gap-2">
+          <button type="button" onclick="closeLabModal()" class="w-1/2 py-2 border rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-50">Batal</button>
+          <button type="submit" class="w-1/2 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-bold">Simpan Analisa Lab</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // --- Data Storage & State ---
+    let batches = JSON.parse(localStorage.getItem('wp_batches')) || [
+      {
+        id: 'BATCH-20260925-01',
+        targetTank: 'T100-2',
+        sourceTank: 'Tank Farm 01',
+        initialSounding: 700.0,
+        feedTemp: 57,
+        caBakCount: 2,
+        waterQty: 10.0,
+        soundingAfterDosing: 710.0,
+        drainStartTime: '2026-09-25T06:15:00',
+        drainEndTime: '2026-09-25T08:45:00',
+        drainDurationMinutes: 150,
+        soundingAfterDrain: 674.4,
+        drainTemp: 55,
+        qtyDrained: 35.6,
+        lab: { phos: 17.711, ffa: 4.2, mi: 0.12, og: 4.5 },
+        status: 'READY_TRANSFER' // INITIAL, SEDIMENTATION, DRAINING, DRAINED, READY_TRANSFER, COMPLETED
+      }
+    ];
+
+    let soundingChartInstance = null;
+    let labChartInstance = null;
+
+    function saveState() {
+      localStorage.setItem('wp_batches', JSON.stringify(batches));
+      renderApp();
+    }
+
+    // --- Main Render Function ---
+    function renderApp() {
+      renderKPIs();
+      renderActiveBatches();
+      renderTable();
+      renderCharts();
+    }
+
+    // --- KPI Calculation ---
+    function renderKPIs() {
+      const active = batches.filter(b => b.status !== 'COMPLETED');
+      document.getElementById('kpiActiveBatches').innerText = active.length;
+      
+      const draining = batches.filter(b => b.status === 'DRAINING');
+      document.getElementById('kpiDrainingBatches').innerText = draining.length;
+
+      const phosList = batches.filter(b => b.lab && b.lab.phos).map(b => b.lab.phos);
+      const avgPhos = phosList.length ? (phosList.reduce((a,b)=>a+b,0)/phosList.length).toFixed(2) : 0;
+      document.getElementById('kpiAvgPhos').innerText = `${avgPhos} ppm`;
+
+      const ready = batches.filter(b => b.status === 'READY_TRANSFER');
+      document.getElementById('kpiReadyTransfer').innerText = `${ready.length} Batch`;
+    }
+
+    // --- Active Batches Render ---
+    function renderActiveBatches() {
+      const container = document.getElementById('activeBatchesContainer');
+      container.innerHTML = '';
+
+      const activeList = batches.filter(b => b.status !== 'COMPLETED');
+
+      if (activeList.length === 0) {
+        container.innerHTML = `
+          <div class="col-span-full py-8 text-center text-slate-400 text-sm">
+            Tidak ada batch aktif saat ini. Klik <b class="text-slate-600">"Batch Baru"</b> untuk memulai.
+          </div>
+        `;
+        return;
+      }
+
+      activeList.forEach(b => {
+        let statusBadge = '';
+        let actionButtons = '';
+
+        if (b.status === 'INITIAL') {
+          statusBadge = `<span class="bg-slate-100 text-slate-700 text-xs px-2.5 py-1 rounded-full font-semibold">Saldo Awal</span>`;
+          actionButtons = `
+            <button onclick="openDosingModal('${b.id}')" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-xs font-bold transition flex justify-center items-center gap-1.5">
+              <i class="fa-solid fa-flask"></i> Input Dosis CA & Air
+            </button>
+          `;
+        } else if (b.status === 'SEDIMENTATION') {
+          statusBadge = `<span class="bg-blue-100 text-blue-700 text-xs px-2.5 py-1 rounded-full font-semibold">Sedimentasi</span>`;
+          actionButtons = `
+            <button onclick="startDrain('${b.id}')" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-lg text-xs font-bold transition flex justify-center items-center gap-1.5 shadow-md">
+              <i class="fa-solid fa-play"></i> ▶ START DRAIN OTOMATIS
+            </button>
+          `;
+        } else if (b.status === 'DRAINING') {
+          statusBadge = `<span class="bg-amber-100 text-amber-800 text-xs px-2.5 py-1 rounded-full font-semibold animate-pulse">⚡ Sedang Drain...</span>`;
+          const startTimeFormatted = new Date(b.drainStartTime).toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
+          actionButtons = `
+            <div class="text-xs text-amber-700 bg-amber-50 p-2 rounded mb-2 font-mono text-center">
+              Mulai Drain: <b>${startTimeFormatted} WIB</b>
+            </div>
+            <button onclick="openStopDrainModal('${b.id}')" class="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg text-xs font-bold transition flex justify-center items-center gap-1.5 shadow-md">
+              <i class="fa-solid fa-stop"></i> ⏹ STOP DRAIN & SOUNDING
+            </button>
+          `;
+        } else if (b.status === 'DRAINED' || b.status === 'READY_TRANSFER') {
+          statusBadge = `<span class="bg-emerald-100 text-emerald-800 text-xs px-2.5 py-1 rounded-full font-semibold">Siap Transfer</span>`;
+          actionButtons = `
+            <div class="grid grid-cols-2 gap-2">
+              <button onclick="openLabModal('${b.id}')" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 py-2 rounded-lg text-xs font-bold transition flex justify-center items-center gap-1 border border-indigo-200">
+                <i class="fa-solid fa-vial"></i> Input Lab
+              </button>
+              <button onclick="sendToWhatsApp('${b.id}')" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 py-2 rounded-lg text-xs font-bold transition flex justify-center items-center gap-1 border border-emerald-200">
+                <i class="fa-brands fa-whatsapp"></i> Kirim WA
+              </button>
+            </div>
+            <button onclick="completeBatch('${b.id}')" class="w-full mt-2 bg-slate-800 hover:bg-slate-900 text-white py-2 rounded-lg text-xs font-bold transition">
+              Selesaikan Batch
+            </button>
+          `;
+        }
+
+        const card = document.createElement('div');
+        card.className = "bg-white border border-slate-200 rounded-xl p-4 shadow-sm hover:shadow-md transition space-y-3";
+        card.innerHTML = `
+          <div class="flex justify-between items-start">
+            <div>
+              <span class="text-xs font-mono font-bold text-slate-400">${b.id}</span>
+              <h3 class="text-lg font-extrabold text-slate-800">${b.targetTank}</h3>
+            </div>
+            ${statusBadge}
+          </div>
+          <div class="grid grid-cols-2 gap-2 text-xs bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+            <div>
+              <span class="text-slate-400 block">Asal Tank:</span>
+              <span class="font-semibold text-slate-700">${b.sourceTank}</span>
+            </div>
+            <div>
+              <span class="text-slate-400 block">Sounding Awal:</span>
+              <span class="font-semibold text-slate-700">${b.initialSounding} M³</span>
+            </div>
+            <div>
+              <span class="text-slate-400 block">Dosis CA / Air:</span>
+              <span class="font-semibold text-slate-700">${b.caBakCount ? b.caBakCount + ' Bak / ' + b.waterQty + ' M³' : '-'}</span>
+            </div>
+            <div>
+              <span class="text-slate-400 block">QTY Drained:</span>
+              <span class="font-bold text-amber-600">${b.qtyDrained ? b.qtyDrained + ' M³' : '-'}</span>
+            </div>
+          </div>
+          ${b.drainDurationMinutes ? `
+            <div class="text-xs text-slate-600 bg-amber-50 p-2 rounded flex justify-between">
+              <span>Lama Drain:</span>
+              <span class="font-bold text-amber-800">${formatDuration(b.drainDurationMinutes)}</span>
+            </div>
+          ` : ''}
+          ${actionButtons}
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // --- One-Tap Start Drain ---
+    function startDrain(batchId) {
+      const b = batches.find(x => x.id === batchId);
+      if (b) {
+        b.drainStartTime = new Date().toISOString();
+        b.status = 'DRAINING';
+        saveState();
+      }
+    }
+
+    // --- Stop Drain Action ---
+    function openStopDrainModal(batchId) {
+      document.getElementById('stopDrainBatchId').value = batchId;
+      document.getElementById('stopDrainModal').classList.remove('hidden');
+    }
+
+    function handleSaveStopDrain(e) {
+      e.preventDefault();
+      const batchId = document.getElementById('stopDrainBatchId').value;
+      const b = batches.find(x => x.id === batchId);
+      if (b) {
+        b.drainEndTime = new Date().toISOString();
+        const start = new Date(b.drainStartTime);
+        const end = new Date(b.drainEndTime);
+        b.drainDurationMinutes = Math.round((end - start) / (1000 * 60));
+
+        b.soundingAfterDrain = parseFloat(document.getElementById('soundingAfterDrain').value);
+        b.drainTemp = parseFloat(document.getElementById('drainTemp').value);
+
+        const baseSounding = b.soundingAfterDosing || b.initialSounding;
+        b.qtyDrained = parseFloat((baseSounding - b.soundingAfterDrain).toFixed(2));
+
+        b.status = 'DRAINED';
+        closeStopDrainModal();
+        saveState();
+      }
+    }
+
+    // --- Helper Functions ---
+    function formatDuration(mins) {
+      const h = Math.floor(mins / 60);
+      const m = mins % 60;
+      return h > 0 ? `${h} jam ${m} menit` : `${m} menit`;
+    }
+
+    function completeBatch(id) {
+      const b = batches.find(x => x.id === id);
+      if (b) {
+        b.status = 'COMPLETED';
+        saveState();
+      }
+    }
+
+    // --- WhatsApp Format Trigger ---
+    function sendToWhatsApp(id) {
+      const b = batches.find(x => x.id === id);
+      if (!b) return;
+
+      const text = `*LAPORAN PROSES DRAIN WASHING PLANT*
+Batch: ${b.id}
+Tanki: ${b.targetTank}
+Asal Minyak: ${b.sourceTank}
+
+- Saldo Awal: ${b.initialSounding} M³
+- Dosis CA: ${b.caBakCount || 0} Bak | Air: ${b.waterQty || 0} M³
+- Sounding Selesai Drain: ${b.soundingAfterDrain || '-'} M³
+- Total QTY Drain: *${b.qtyDrained || '-'} M³*
+- Lama Drain: ${b.drainDurationMinutes ? formatDuration(b.drainDurationMinutes) : '-'}
+- Suhu: ${b.drainTemp || '-'}°C
+
+*LAB RESULT:*
+- Phosporus: ${b.lab ? b.lab.phos + ' PPM' : '-'}
+- FFA: ${b.lab ? b.lab.ffa + ' %' : '-'}
+- M&I: ${b.lab ? b.lab.mi + ' %' : '-'}
+- OG: ${b.lab ? b.lab.og + ' PPM' : '-'}`;
+
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+    }
+
+    // --- Modals Toggle Handlers ---
+    function openNewBatchModal() { document.getElementById('newBatchModal').classList.remove('hidden'); }
+    function closeNewBatchModal() { document.getElementById('newBatchModal').classList.add('hidden'); }
+    
+    function handleCreateBatch(e) {
+      e.preventDefault();
+      const newId = `BATCH-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${Math.floor(10 + Math.random() * 90)}`;
+      batches.unshift({
+        id: newId,
+        targetTank: document.getElementById('targetTank').value,
+        sourceTank: document.getElementById('sourceTank').value,
+        initialSounding: parseFloat(document.getElementById('initialSounding').value),
+        feedTemp: parseFloat(document.getElementById('feedTemp').value),
+        status: 'INITIAL'
+      });
+      closeNewBatchModal();
+      saveState();
+    }
+
+    function openDosingModal(id) {
+      document.getElementById('dosingBatchId').value = id;
+      document.getElementById('dosingModal').classList.remove('hidden');
+    }
+    function closeDosingModal() { document.getElementById('dosingModal').classList.add('hidden'); }
+
+    function handleSaveDosing(e) {
+      e.preventDefault();
+      const b = batches.find(x => x.id === document.getElementById('dosingBatchId').value);
+      if (b) {
+        b.caBakCount = parseInt(document.getElementById('caBakCount').value);
+        b.waterQty = parseFloat(document.getElementById('waterQty').value);
+        b.soundingAfterDosing = parseFloat(document.getElementById('soundingAfterDosing').value);
+        b.status = 'SEDIMENTATION';
+        closeDosingModal();
+        saveState();
+      }
+    }
+
+    function closeStopDrainModal() { document.getElementById('stopDrainModal').classList.add('hidden'); }
+
+    function openLabModal(id) {
+      document.getElementById('labBatchId').value = id;
+      document.getElementById('labModal').classList.remove('hidden');
+    }
+    function closeLabModal() { document.getElementById('labModal').classList.add('hidden'); }
+
+    function handleSaveLab(e) {
+      e.preventDefault();
+      const b = batches.find(x => x.id === document.getElementById('labBatchId').value);
+      if (b) {
+        b.lab = {
+          phos: parseFloat(document.getElementById('labPhos').value),
+          ffa: parseFloat(document.getElementById('labFFA').value),
+          mi: parseFloat(document.getElementById('labMI').value),
+          og: parseFloat(document.getElementById('labOG').value)
+        };
+        b.status = 'READY_TRANSFER';
+        closeLabModal();
+        saveState();
+      }
+    }
+
+    // --- Table History Render ---
+    function renderTable() {
+      const tbody = document.getElementById('historyTableBody');
+      const query = document.getElementById('searchInput').value.toLowerCase();
+      tbody.innerHTML = '';
+
+      const filtered = batches.filter(b => b.id.toLowerCase().includes(query) || b.targetTank.toLowerCase().includes(query));
+
+      filtered.forEach(b => {
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50 transition border-b border-slate-100";
+        tr.innerHTML = `
+          <td class="p-3 font-mono font-bold">${b.id}</td>
+          <td class="p-3 font-bold text-slate-700">${b.targetTank}</td>
+          <td class="p-3">${b.sourceTank}</td>
+          <td class="p-3">${b.initialSounding} M³</td>
+          <td class="p-3">${b.caBakCount ? b.caBakCount + ' Bak / ' + b.waterQty + ' M³' : '-'}</td>
+          <td class="p-3 font-semibold">${b.drainDurationMinutes ? formatDuration(b.drainDurationMinutes) : '-'}</td>
+          <td class="p-3 font-bold text-amber-600">${b.qtyDrained ? b.qtyDrained + ' M³' : '-'}</td>
+          <td class="p-3">${b.lab ? `${b.lab.phos} ppm / ${b.lab.ffa}%` : '-'}</td>
+          <td class="p-3"><span class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-200 text-slate-700">${b.status}</span></td>
+          <td class="p-3 text-center">
+            <button onclick="deleteBatch('${b.id}')" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function deleteBatch(id) {
+      if (confirm(`Hapus data ${id}?`)) {
+        batches = batches.filter(x => x.id !== id);
+        saveState();
+      }
+    }
+
+    // --- Render Analytics Charts ---
+    function renderCharts() {
+      const labels = batches.slice(-5).map(b => b.targetTank);
+      const initialData = batches.slice(-5).map(b => b.initialSounding);
+      const drainedData = batches.slice(-5).map(b => b.qtyDrained || 0);
+
+      if (soundingChartInstance) soundingChartInstance.destroy();
+      const ctx1 = document.getElementById('soundingChart').getContext('2d');
+      soundingChartInstance = new Chart(ctx1, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [
+            { label: 'Sounding Awal (M³)', data: initialData, backgroundColor: '#3b82f6' },
+            { label: 'QTY Drain (M³)', data: drainedData, backgroundColor: '#f59e0b' }
+          ]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+
+      const labLabels = batches.slice(-5).map(b => b.id.slice(-5));
+      const phosData = batches.slice(-5).map(b => b.lab ? b.lab.phos : 0);
+      const ffaData = batches.slice(-5).map(b => b.lab ? b.lab.ffa : 0);
+
+      if (labChartInstance) labChartInstance.destroy();
+      const ctx2 = document.getElementById('labChart').getContext('2d');
+      labChartInstance = new Chart(ctx2, {
+        type: 'line',
+        data: {
+          labels: labLabels,
+          datasets: [
+            { label: 'Phosporus (PPM)', data: phosData, borderColor: '#8b5cf6', fill: false },
+            { label: 'FFA (%)', data: ffaData, borderColor: '#ef4444', fill: false }
+          ]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+    }
+
+    // --- Export CSV / Excel ---
+    function exportToCSV() {
+      let csv = "Batch ID,Target Tank,Source Tank,Sounding Awal,Bak CA,QTY Air,Lama Drain (Mnt),QTY Drain,Phosporus,FFA,M&I,OG,Status\n";
+      batches.forEach(b => {
+        csv += `"${b.id}","${b.targetTank}","${b.sourceTank}",${b.initialSounding},${b.caBakCount||0},${b.waterQty||0},${b.drainDurationMinutes||0},${b.qtyDrained||0},${b.lab?b.lab.phos:''},${b.lab?b.lab.ffa:''},${b.lab?b.lab.mi:''},${b.lab?b.lab.og:''},"${b.status}"\n`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.setAttribute('href', url);
+      a.setAttribute('download', `Washing_Plant_Report_${new Date().toISOString().slice(0,10)}.csv`);
+      a.click();
+    }
+
+    // Initial Load
+    renderApp();
+  </script>
+</body>
+</html>
