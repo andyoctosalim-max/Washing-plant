@@ -50,14 +50,36 @@
     <!-- History Table -->
     <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
       <div class="p-5 border-b border-slate-100 flex flex-wrap justify-between items-center gap-4">
-        <h2 class="text-lg font-bold text-slate-800">Riwayat Seluruh Batch</h2>
-        <input type="text" id="searchInput" oninput="renderTable()" placeholder="Cari Batch ID / Tanki..." class="px-3 py-1.5 border border-slate-300 rounded-lg text-sm w-full sm:w-64 focus:outline-none focus:ring-2 focus:ring-amber-500">
+        <div>
+          <h2 class="text-lg font-bold text-slate-800">Riwayat Seluruh Batch</h2>
+          <p class="text-xs text-slate-400">Filter tanggal untuk mengunduh laporan harian/periodik</p>
+        </div>
+        
+        <!-- Filter Range Tanggal & Pencarian -->
+        <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+          <div class="flex items-center gap-1.5 bg-slate-50 p-1.5 rounded-lg border border-slate-200 text-xs">
+            <i class="fa-solid fa-calendar-days text-slate-400 pl-1"></i>
+            <input type="date" id="filterStartDate" onchange="renderTable()" class="bg-transparent border-0 focus:outline-none text-slate-700">
+            <span class="text-slate-400">s/d</span>
+            <input type="date" id="filterEndDate" onchange="renderTable()" class="bg-transparent border-0 focus:outline-none text-slate-700">
+            <button onclick="clearDateFilter()" title="Reset Filter Tanggal" class="text-slate-400 hover:text-slate-600 px-1">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+          
+          <input type="text" id="searchInput" oninput="renderTable()" placeholder="Cari Batch ID / Tanki..." class="px-3 py-1.5 border border-slate-300 rounded-lg text-sm w-full sm:w-48 focus:outline-none focus:ring-2 focus:ring-amber-500">
+          
+          <button onclick="exportToCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5">
+            <i class="fa-solid fa-file-excel"></i> Export Range
+          </button>
+        </div>
       </div>
+      
       <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse text-xs">
           <thead>
             <tr class="bg-slate-800 text-slate-200 uppercase font-semibold">
-              <th class="p-3">Batch ID</th>
+              <th class="p-3">Batch ID / Tanggal</th>
               <th class="p-3">Tanki</th>
               <th class="p-3">Sounding Awal (mm / Kg)</th>
               <th class="p-3">Lab Feed (Phos / FFA / M&I)</th>
@@ -445,7 +467,6 @@
       return Math.round(baseLiter + fractionLiter);
     }
 
-    // Mencari Sounding mm berdasarkan estimasi Liter dari total massa Campuran
     function reverseLookupMMFromLiter(targetLiter) {
       if (!targetLiter || targetLiter <= 0) return 0;
       let closestMM = 0;
@@ -499,12 +520,10 @@
       renderTable();
     }
 
-    // --- Google Sheets Auto Backup Webhook ---
     function syncToGoogleSheets(batchData) {
       if (!GOOGLE_SHEET_URL) return;
       const initCalc = calculateExactKgWithOffset(batchData.rawInitialSounding, batchData.feedTemp, batchData.targetTank);
       
-      // Kalkulasi Campuran
       const caKg = (batchData.caSackCount || 0) * 25;
       const waterKg = batchData.waterQty <= 100 ? (batchData.waterQty || 0) * 1000 : (batchData.waterQty || 0);
       const mixKgTotal = batchData.status !== 'INITIAL' ? (initCalc.kg + caKg + waterKg) : 0;
@@ -515,6 +534,7 @@
 
       const payload = {
         id: batchData.id,
+        createdAt: batchData.createdAt || new Date().toISOString(),
         targetTank: batchData.targetTank,
         sourceTank: batchData.sourceTank,
         rawInitialSounding: batchData.rawInitialSounding,
@@ -565,15 +585,13 @@
 
         const initCalc = calculateExactKgWithOffset(b.rawInitialSounding, b.feedTemp, b.targetTank);
         
-        // Perhitungan Total Kg Campuran = Minyak Awal (Kg) + CA (Kg) + Air (Kg)
-        const caKg = (b.caSackCount || 0) * 25; // 1 Sack = 25 Kg
-        const waterKg = b.waterQty <= 100 ? (b.waterQty || 0) * 1000 : (b.waterQty || 0); // Air 1 Liter/M3 = 1 Kg (Densitas = 1)
+        const caKg = (b.caSackCount || 0) * 25;
+        const waterKg = b.waterQty <= 100 ? (b.waterQty || 0) * 1000 : (b.waterQty || 0);
         const mixKgTotal = b.caSackCount || b.waterQty ? (initCalc.kg + caKg + waterKg) : null;
 
         const mixCalc = calculateExactKgWithOffset(b.rawSoundingAfterDosing, b.mixTemp, b.targetTank);
         const drainCalc = calculateExactKgWithOffset(b.rawSoundingAfterDrain, b.drainTemp, b.targetTank);
         
-        // QTY Loss = Total Campuran (Kg) - Drain Sounding Akhir (Kg)
         const qtyLossKg = (mixKgTotal && drainCalc.kg) ? (mixKgTotal - drainCalc.kg) : '-';
 
         if (b.status === 'INITIAL') {
@@ -644,7 +662,6 @@
       });
     }
 
-    // --- Modal Edit / Revisi Full ---
     function openEditModal(batchId) {
       const b = batches.find(x => x.id === batchId);
       if (!b) return;
@@ -696,7 +713,6 @@
         const water = document.getElementById('editWaterQty').value;
         if (water) {
           b.waterQty = parseFloat(water);
-          // Auto Calculate Sounding Campuran
           const initCalc = calculateExactKgWithOffset(b.rawInitialSounding, b.feedTemp, b.targetTank);
           const waterInLiters = b.waterQty <= 100 ? b.waterQty * 1000 : b.waterQty;
           const totalMixVolumeInLiter = initCalc.liter + waterInLiters;
@@ -791,6 +807,7 @@
 
       const text = `*LAPORAN PROSES DRAIN WASHING PLANT*
 Batch: ${b.id}
+Tanggal: ${b.createdAt ? new Date(b.createdAt).toLocaleDateString('id-ID') : '-'}
 Tanki: ${b.targetTank} (Asal: ${b.sourceTank})
 
 - Sounding Awal: Input ${b.rawInitialSounding}mm -> *Final ${initCalc.finalMM}mm* (${initCalc.kg.toLocaleString('id-ID')} Kg @ ${b.feedTemp}°C)
@@ -823,13 +840,16 @@ Tanki: ${b.targetTank} (Asal: ${b.sourceTank})
 
     function handleCreateBatch(e) {
       e.preventDefault();
-      const newId = `BATCH-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${Math.floor(10 + Math.random() * 90)}`;
+      const now = new Date();
+      const dateStr = now.toISOString().slice(0,10).replace(/-/g,'');
+      const newId = `BATCH-${dateStr}-${Math.floor(10 + Math.random() * 90)}`;
       const feedPhos = document.getElementById('feedPhos').value;
       const feedFFA = document.getElementById('feedFFA').value;
       const feedMI = document.getElementById('feedMI').value;
 
       const newBatch = {
         id: newId,
+        createdAt: now.toISOString(),
         targetTank: document.getElementById('targetTank').value,
         sourceTank: document.getElementById('sourceTank').value,
         rawInitialSounding: parseInt(document.getElementById('initialSounding').value),
@@ -854,7 +874,6 @@ Tanki: ${b.targetTank} (Asal: ${b.sourceTank})
     }
     function closeDosingModal() { document.getElementById('dosingModal').classList.add('hidden'); }
 
-    // --- Handling Input Dosis CA & Air dengan Kalkulasi Kg Campuran Baru ---
     function handleSaveDosing(e) {
       e.preventDefault();
       const b = batches.find(x => x.id === document.getElementById('dosingBatchId').value);
@@ -863,7 +882,6 @@ Tanki: ${b.targetTank} (Asal: ${b.sourceTank})
         const waterVal = parseFloat(document.getElementById('waterQty').value);
         b.waterQty = waterVal;
 
-        // Sounding Campuran Otomatis dari Total Liter
         const initCalc = calculateExactKgWithOffset(b.rawInitialSounding, b.feedTemp, b.targetTank);
         const waterInLiters = waterVal <= 100 ? waterVal * 1000 : waterVal;
         const totalMixVolumeInLiter = initCalc.liter + waterInLiters;
@@ -901,12 +919,59 @@ Tanki: ${b.targetTank} (Asal: ${b.sourceTank})
       }
     }
 
+    // Helper untuk memfilter data berdasarkan range tanggal
+    function getFilteredBatches() {
+      const query = document.getElementById('searchInput').value.toLowerCase();
+      const startDateVal = document.getElementById('filterStartDate').value;
+      const endDateVal = document.getElementById('filterEndDate').value;
+
+      return batches.filter(b => {
+        // Match Search Text
+        const matchesSearch = b.id.toLowerCase().includes(query) || b.targetTank.toLowerCase().includes(query);
+
+        // Match Date Range
+        let matchesDate = true;
+        if (startDateVal || endDateVal) {
+          // Ambil tanggal pembuatan batch atau ekstrak dari BATCH ID (Format: BATCH-YYYYMMDD-XX)
+          let batchDateStr = '';
+          if (b.createdAt) {
+            batchDateStr = b.createdAt.slice(0, 10);
+          } else {
+            const parts = b.id.split('-');
+            if (parts.length >= 2 && parts[1].length === 8) {
+              const y = parts[1].slice(0, 4);
+              const m = parts[1].slice(4, 6);
+              const d = parts[1].slice(6, 8);
+              batchDateStr = `${y}-${m}-${d}`;
+            }
+          }
+
+          if (batchDateStr) {
+            if (startDateVal && batchDateStr < startDateVal) matchesDate = false;
+            if (endDateVal && batchDateStr > endDateVal) matchesDate = false;
+          }
+        }
+
+        return matchesSearch && matchesDate;
+      });
+    }
+
+    function clearDateFilter() {
+      document.getElementById('filterStartDate').value = '';
+      document.getElementById('filterEndDate').value = '';
+      renderTable();
+    }
+
     function renderTable() {
       const tbody = document.getElementById('historyTableBody');
-      const query = document.getElementById('searchInput').value.toLowerCase();
       tbody.innerHTML = '';
 
-      const filtered = batches.filter(b => b.id.toLowerCase().includes(query) || b.targetTank.toLowerCase().includes(query));
+      const filtered = getFilteredBatches();
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="11" class="p-4 text-center text-slate-400">Tidak ada data batch yang sesuai dengan filter.</td></tr>`;
+        return;
+      }
 
       filtered.forEach(b => {
         const initCalc = calculateExactKgWithOffset(b.rawInitialSounding, b.feedTemp, b.targetTank);
@@ -919,10 +984,15 @@ Tanki: ${b.targetTank} (Asal: ${b.sourceTank})
         const drainCalc = calculateExactKgWithOffset(b.rawSoundingAfterDrain, b.drainTemp, b.targetTank);
         const qtyLossKg = (mixKgTotal && drainCalc.kg) ? (mixKgTotal - drainCalc.kg) : '-';
 
+        const displayDate = b.createdAt ? new Date(b.createdAt).toLocaleDateString('id-ID') : '';
+
         const tr = document.createElement('tr');
         tr.className = "hover:bg-slate-50 transition border-b border-slate-100";
         tr.innerHTML = `
-          <td class="p-3 font-mono font-bold">${b.id}</td>
+          <td class="p-3">
+            <span class="font-mono font-bold block">${b.id}</span>
+            <span class="text-[10px] text-slate-400">${displayDate}</span>
+          </td>
           <td class="p-3 font-bold text-slate-700">${b.targetTank}</td>
           <td class="p-3">In: ${b.rawInitialSounding} mm ➔ <b>Final: ${initCalc.finalMM} mm</b><br><span class="text-[10px] text-slate-400">(${initCalc.kg.toLocaleString('id-ID')} Kg @ ${b.feedTemp}°C)</span></td>
           <td class="p-3">${b.feedLab && (b.feedLab.phos || b.feedLab.ffa || b.feedLab.mi) ? `${b.feedLab.phos || '-'} ppm / ${b.feedLab.ffa \vert{}\vert{} '-'}\% /${b.feedLab.mi || '-'}%` : '-'}</td>
@@ -948,9 +1018,18 @@ Tanki: ${b.targetTank} (Asal: ${b.sourceTank})
       }
     }
 
+    // Export Excel / CSV dengan Penyesuaian Range Tanggal
     function exportToCSV() {
-      let csv = "Batch ID,Target Tank,Source Tank,Input Awal (mm),Offset Bottom (mm),Final Awal (mm),Suhu Feed (C),Awal (Kg),Feed Phos (PPM),Feed FFA (%),Feed M&I (%),Sack CA,CA (Kg),QTY Air (M3),Air (Kg),Sounding Campuran (mm),Total Campuran (Kg),Input Drain (mm),Final Drain (mm),Suhu Drain (C),Drain (Kg),QTY Loss Drain (Kg),Lama Drain (Mnt),Washing Phos (PPM),Washing FFA (%),Washing M&I (%),Status\n";
-      batches.forEach(b => {
+      const dataToExport = getFilteredBatches();
+
+      if (dataToExport.length === 0) {
+        alert("Tidak ada data batch untuk di-export pada range tanggal ini!");
+        return;
+      }
+
+      let csv = "Batch ID,Waktu Dibuat,Target Tank,Source Tank,Input Awal (mm),Offset Bottom (mm),Final Awal (mm),Suhu Feed (C),Awal (Kg),Feed Phos (PPM),Feed FFA (%),Feed M&I (%),Sack CA,CA (Kg),QTY Air (M3),Air (Kg),Sounding Campuran (mm),Total Campuran (Kg),Input Drain (mm),Final Drain (mm),Suhu Drain (C),Drain (Kg),QTY Loss Drain (Kg),Lama Drain (Mnt),Washing Phos (PPM),Washing FFA (%),Washing M&I (%),Status\n";
+      
+      dataToExport.forEach(b => {
         const initCalc = calculateExactKgWithOffset(b.rawInitialSounding, b.feedTemp, b.targetTank);
         
         const caKg = (b.caSackCount || 0) * 25;
@@ -961,13 +1040,24 @@ Tanki: ${b.targetTank} (Asal: ${b.sourceTank})
         const drainCalc = calculateExactKgWithOffset(b.rawSoundingAfterDrain, b.drainTemp, b.targetTank);
         const qtyLossKg = (mixKgTotal && drainCalc.kg) ? (mixKgTotal - drainCalc.kg) : 0;
 
-        csv += `"${b.id}","${b.targetTank}","${b.sourceTank}",${b.rawInitialSounding},${initCalc.offset},${initCalc.finalMM},${b.feedTemp},${initCalc.kg},${b.feedLab?b.feedLab.phos:''},${b.feedLab?b.feedLab.ffa:''},${b.feedLab?b.feedLab.mi:''},${b.caSackCount||0},${caKg},${b.waterQty||0},${waterKg},${mixCalc.finalMM},${mixKgTotal},${b.rawSoundingAfterDrain||0},${drainCalc.finalMM},${b.drainTemp||0},${drainCalc.kg},${qtyLossKg},${b.drainDurationMinutes||0},${b.lab?b.lab.phos:''},${b.lab?b.lab.ffa:''},${b.lab?b.lab.mi:''},"${b.status}"\n`;
+        const createdAtStr = b.createdAt ? new Date(b.createdAt).toLocaleString('id-ID') : '';
+
+        csv += `"${b.id}","${createdAtStr}","${b.targetTank}","${b.sourceTank}",${b.rawInitialSounding},${initCalc.offset},${initCalc.finalMM},${b.feedTemp},${initCalc.kg},${b.feedLab?b.feedLab.phos:''},${b.feedLab?b.feedLab.ffa:''},${b.feedLab?b.feedLab.mi:''},${b.caSackCount||0},${caKg},${b.waterQty||0},${waterKg},${mixCalc.finalMM},${mixKgTotal},${b.rawSoundingAfterDrain||0},${drainCalc.finalMM},${b.drainTemp||0},${drainCalc.kg},${qtyLossKg},${b.drainDurationMinutes||0},${b.lab?b.lab.phos:''},${b.lab?b.lab.ffa:''},${b.lab?b.lab.mi:''},"${b.status}"\n`;
       });
-      const blob = new Blob([csv], { type: 'text/csv' });
+
+      const startDateVal = document.getElementById('filterStartDate').value;
+      const endDateVal = document.getElementById('filterEndDate').value;
+      let filenameRange = new Date().toISOString().slice(0,10);
+      
+      if (startDateVal || endDateVal) {
+        filenameRange = `${startDateVal || 'Awal'}_s-d_${endDateVal || 'Akhir'}`;
+      }
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.setAttribute('href', url);
-      a.setAttribute('download', `Washing_Plant_Report_${new Date().toISOString().slice(0,10)}.csv`);
+      a.setAttribute('download', `Washing_Plant_Report_${filenameRange}.csv`);
       a.click();
     }
 
