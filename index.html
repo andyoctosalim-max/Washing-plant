@@ -508,7 +508,12 @@
       return { rawMM: rawInputMM, finalMM, offset, liter, vcf, density, kg };
     }
 
-    let batches = JSON.parse(localStorage.getItem('wp_batches_v8')) || [];
+    let batches = [];
+    try {
+      batches = JSON.parse(localStorage.getItem('wp_batches_v8')) || [];
+    } catch(err) {
+      batches = [];
+    }
 
     function saveState() {
       localStorage.setItem('wp_batches_v8', JSON.stringify(batches));
@@ -569,8 +574,18 @@
       }).catch(err => console.log("Sheet Sync Error:", err));
     }
 
+    function formatLabText(labObj) {
+      if (!labObj) return 'Belum diisi';
+      const p = labObj.phos !== null && labObj.phos !== undefined ? labObj.phos : '-';
+      const f = labObj.ffa !== null && labObj.ffa !== undefined ? labObj.ffa : '-';
+      const m = labObj.mi !== null && labObj.mi !== undefined ? labObj.mi : '-';
+      if (p === '-' && f === '-' && m === '-') return 'Belum diisi';
+      return `Phos: ${p} ppm | FFA: ${f}% | M&I: ${m}%`;
+    }
+
     function renderActiveBatches() {
       const container = document.getElementById('activeBatchesContainer');
+      if (!container) return;
       container.innerHTML = '';
       const activeList = batches.filter(b => b.status !== 'COMPLETED');
 
@@ -647,7 +662,7 @@
             <div><span class="text-slate-400 block">Asal Tank:</span><span class="font-semibold">${b.sourceTank}</span></div>
             <div><span class="text-slate-400 block">Awal (Final mm/Kg):</span><span class="font-semibold">${initCalc.finalMM} mm<br><b>${initCalc.kg.toLocaleString('id-ID')} Kg</b></span></div>
             <div class="col-span-2 text-indigo-700 bg-indigo-50 p-1.5 rounded font-medium">
-              <b>Lab Feed Awal:</b> ${b.feedLab && (b.feedLab.phos || b.feedLab.ffa || b.feedLab.mi) ? `Phos: ${b.feedLab.phos || '-'} ppm | FFA: ${b.feedLab.ffa \vert{}\vert{} '-'}\% \vert{} M&I:${b.feedLab.mi || '-'}%` : 'Belum diisi'}
+              <b>Lab Feed Awal:</b> ${formatLabText(b.feedLab)}
             </div>
             <div><span class="text-slate-400 block">Dosis CA & Air:</span><span class="font-semibold">${b.caSackCount ? b.caSackCount + ' Sack (' + caKg + ' Kg) / ' + b.waterQty + ' M³ (' + waterKg.toLocaleString('id-ID') + ' Kg)' : '-'}</span></div>
             <div><span class="text-slate-400 block">Campuran (Sounding/Total Kg):</span><span class="font-semibold text-blue-800">${mixCalc.finalMM ? mixCalc.finalMM + ' mm<br><b>' + mixKgTotal.toLocaleString('id-ID') + ' Kg</b>' : '-'}</span></div>
@@ -827,16 +842,24 @@ Tanki: ${b.targetTank} (Asal: ${b.sourceTank})
     }
 
     function updateBottomNotice() {
-      const tank = document.getElementById('targetTank').value;
+      const tankEl = document.getElementById('targetTank');
+      if (!tankEl) return;
+      const tank = tankEl.value;
       const offset = getTankBottomOffset(tank);
-      document.getElementById('initialNotice').innerText = `Akan otomatis ditambah +${offset} mm (Bottom)`;
+      const noticeEl = document.getElementById('initialNotice');
+      if (noticeEl) noticeEl.innerText = `Akan otomatis ditambah +${offset} mm (Bottom)`;
     }
 
     function openNewBatchModal() { 
       updateBottomNotice();
-      document.getElementById('newBatchModal').classList.remove('hidden'); 
+      const modal = document.getElementById('newBatchModal');
+      if (modal) modal.classList.remove('hidden'); 
     }
-    function closeNewBatchModal() { document.getElementById('newBatchModal').classList.add('hidden'); }
+
+    function closeNewBatchModal() { 
+      const modal = document.getElementById('newBatchModal');
+      if (modal) modal.classList.add('hidden'); 
+    }
 
     function handleCreateBatch(e) {
       e.preventDefault();
@@ -844,9 +867,9 @@ Tanki: ${b.targetTank} (Asal: ${b.sourceTank})
       const dateStr = now.toISOString().slice(0,10).replace(/-/g,'');
       const newId = `BATCH-${dateStr}-${Math.floor(10 + Math.random() * 90)}`;
 
-      const feedPhosVal = document.getElementById('newFeedPhos').value;
-      const feedFFAVal = document.getElementById('newFeedFFA').value;
-      const feedMIVal = document.getElementById('newFeedMI').value;
+      const feedPhosEl = document.getElementById('newFeedPhos');
+      const feedFFAEl = document.getElementById('newFeedFFA');
+      const feedMIEl = document.getElementById('newFeedMI');
 
       const newBatch = {
         id: newId,
@@ -856,9 +879,9 @@ Tanki: ${b.targetTank} (Asal: ${b.sourceTank})
         rawInitialSounding: parseInt(document.getElementById('initialSounding').value),
         feedTemp: parseInt(document.getElementById('feedTemp').value),
         feedLab: {
-          phos: feedPhosVal ? parseFloat(feedPhosVal) : null,
-          ffa: feedFFAVal ? parseFloat(feedFFAVal) : null,
-          mi: feedMIVal ? parseFloat(feedMIVal) : null
+          phos: feedPhosEl && feedPhosEl.value ? parseFloat(feedPhosEl.value) : null,
+          ffa: feedFFAEl && feedFFAEl.value ? parseFloat(feedFFAEl.value) : null,
+          mi: feedMIEl && feedMIEl.value ? parseFloat(feedMIEl.value) : null
         },
         status: 'INITIAL'
       };
@@ -867,7 +890,8 @@ Tanki: ${b.targetTank} (Asal: ${b.sourceTank})
       closeNewBatchModal();
       saveState();
       syncToGoogleSheets(newBatch);
-      document.getElementById('newBatchForm').reset();
+      const form = document.getElementById('newBatchForm');
+      if (form) form.reset();
     }
 
     function openDosingModal(id) {
@@ -922,9 +946,13 @@ Tanki: ${b.targetTank} (Asal: ${b.sourceTank})
     }
 
     function getFilteredBatches() {
-      const query = document.getElementById('searchInput').value.toLowerCase();
-      const startDateVal = document.getElementById('filterStartDate').value;
-      const endDateVal = document.getElementById('filterEndDate').value;
+      const searchEl = document.getElementById('searchInput');
+      const startEl = document.getElementById('filterStartDate');
+      const endEl = document.getElementById('filterEndDate');
+
+      const query = searchEl ? searchEl.value.toLowerCase() : '';
+      const startDateVal = startEl ? startEl.value : '';
+      const endDateVal = endEl ? endEl.value : '';
 
       return batches.filter(b => {
         const matchesSearch = b.id.toLowerCase().includes(query) || b.targetTank.toLowerCase().includes(query);
@@ -955,13 +983,14 @@ Tanki: ${b.targetTank} (Asal: ${b.sourceTank})
     }
 
     function clearDateFilter() {
-      document.getElementById('filterStartDate').value = '';
-      document.getElementById('filterEndDate').value = '';
+      if (document.getElementById('filterStartDate')) document.getElementById('filterStartDate').value = '';
+      if (document.getElementById('filterEndDate')) document.getElementById('filterEndDate').value = '';
       renderTable();
     }
 
     function renderTable() {
       const tbody = document.getElementById('historyTableBody');
+      if (!tbody) return;
       tbody.innerHTML = '';
 
       const filtered = getFilteredBatches();
@@ -1042,8 +1071,10 @@ Tanki: ${b.targetTank} (Asal: ${b.sourceTank})
         csv += `"${b.id}","${createdAtStr}","${b.targetTank}","${b.sourceTank}",${b.rawInitialSounding},${initCalc.offset},${initCalc.finalMM},${b.feedTemp},${initCalc.kg},${b.feedLab?b.feedLab.phos:''},${b.feedLab?b.feedLab.ffa:''},${b.feedLab?b.feedLab.mi:''},${b.caSackCount||0},${caKg},${b.waterQty||0},${waterKg},${mixCalc.finalMM},${mixKgTotal},${b.rawSoundingAfterDrain||0},${drainCalc.finalMM},${b.drainTemp||0},${drainCalc.kg},${qtyLossKg},${b.drainDurationMinutes||0},${b.lab?b.lab.phos:''},${b.lab?b.lab.ffa:''},${b.lab?b.lab.mi:''},"${b.status}"\n`;
       });
 
-      const startDateVal = document.getElementById('filterStartDate').value;
-      const endDateVal = document.getElementById('filterEndDate').value;
+      const startEl = document.getElementById('filterStartDate');
+      const endEl = document.getElementById('filterEndDate');
+      const startDateVal = startEl ? startEl.value : '';
+      const endDateVal = endEl ? endEl.value : '';
       let filenameRange = new Date().toISOString().slice(0,10);
       
       if (startDateVal || endDateVal) {
