@@ -1,1095 +1,1955 @@
+
+Conversation with Gemini
 <!DOCTYPE html>
+
 <html lang="id">
+
 <head>
+
   <meta charset="UTF-8">
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>Washing Plant - Revision & Google Sheets Backup System</title>
+
   <script src="https://cdn.tailwindcss.com"></script>
+
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
 </head>
+
 <body class="bg-slate-100 font-sans text-slate-800 pb-12">
 
+
+
   <!-- Header -->
+
   <header class="bg-slate-900 text-white shadow-lg sticky top-0 z-30">
+
     <div class="max-w-7xl mx-auto px-4 py-4 flex flex-wrap justify-between items-center gap-4">
+
       <div class="flex items-center space-x-3">
+
         <div class="bg-amber-500 p-2.5 rounded-lg text-slate-900 font-bold">
+
           <i class="fa-solid fa-pen-to-square text-xl"></i>
+
         </div>
+
         <div>
+
           <h1 class="text-xl font-bold tracking-wide">Washing Plant - Tank Farm</h1>
+
           <p class="text-xs text-slate-400">Fitur Revisi Input & Backup Otomatis Google Sheets</p>
+
         </div>
+
       </div>
+
       <div class="flex items-center gap-2">
+
         <button onclick="exportToCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2">
+
           <i class="fa-solid fa-file-excel"></i> Export Excel
+
         </button>
+
         <button onclick="openNewBatchModal()" class="bg-amber-500 hover:bg-amber-600 text-slate-900 px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center gap-2 shadow-md">
+
           <i class="fa-solid fa-plus"></i> Batch Baru
+
         </button>
+
       </div>
+
     </div>
+
   </header>
+
+
 
   <main class="max-w-7xl mx-auto px-4 mt-6 space-y-6">
 
+
+
     <!-- Active Batches Section -->
+
     <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+
       <div class="flex justify-between items-center mb-4">
+
         <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+
           <i class="fa-solid fa-list-check text-amber-500"></i> Batch Berjalan
+
         </h2>
+
         <span class="text-xs text-slate-400">Klik "Edit Data" untuk merevisi kesalahan input</span>
+
       </div>
+
       <div id="activeBatchesContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
         <!-- Rendered via JS -->
+
       </div>
+
     </div>
 
+
+
     <!-- History Table -->
+
     <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+
       <div class="p-5 border-b border-slate-100 flex flex-wrap justify-between items-center gap-4">
-        <div>
-          <h2 class="text-lg font-bold text-slate-800">Riwayat Seluruh Batch</h2>
-          <p class="text-xs text-slate-400">Filter tanggal untuk mengunduh laporan harian/periodik</p>
-        </div>
-        
-        <!-- Filter Range Tanggal & Pencarian -->
-        <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
-          <div class="flex items-center gap-1.5 bg-slate-50 p-1.5 rounded-lg border border-slate-200 text-xs">
-            <i class="fa-solid fa-calendar-days text-slate-400 pl-1"></i>
-            <input type="date" id="filterStartDate" onchange="renderTable()" class="bg-transparent border-0 focus:outline-none text-slate-700">
-            <span class="text-slate-400">s/d</span>
-            <input type="date" id="filterEndDate" onchange="renderTable()" class="bg-transparent border-0 focus:outline-none text-slate-700">
-            <button onclick="clearDateFilter()" title="Reset Filter Tanggal" class="text-slate-400 hover:text-slate-600 px-1">
-              <i class="fa-solid fa-xmark"></i>
-            </button>
-          </div>
-          
-          <input type="text" id="searchInput" oninput="renderTable()" placeholder="Cari Batch ID / Tanki..." class="px-3 py-1.5 border border-slate-300 rounded-lg text-sm w-full sm:w-48 focus:outline-none focus:ring-2 focus:ring-amber-500">
-          
-          <button onclick="exportToCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5">
-            <i class="fa-solid fa-file-excel"></i> Export Range
-          </button>
-        </div>
+
+        <h2 class="text-lg font-bold text-slate-800">Riwayat Seluruh Batch</h2>
+
+        <input type="text" id="searchInput" oninput="renderTable()" placeholder="Cari Batch ID / Tanki..." class="px-3 py-1.5 border border-slate-300 rounded-lg text-sm w-full sm:w-64 focus:outline-none focus:ring-2 focus:ring-amber-500">
+
       </div>
-      
+
       <div class="overflow-x-auto">
+
         <table class="w-full text-left border-collapse text-xs">
+
           <thead>
+
             <tr class="bg-slate-800 text-slate-200 uppercase font-semibold">
-              <th class="p-3">Batch ID / Tanggal</th>
+
+              <th class="p-3">Batch ID</th>
+
               <th class="p-3">Tanki</th>
+
               <th class="p-3">Sounding Awal (mm / Kg)</th>
+
               <th class="p-3">Lab Feed (Phos / FFA / M&I)</th>
+
               <th class="p-3">Dosis CA / Air</th>
+
               <th class="p-3">Campuran (mm / Total Kg)</th>
+
               <th class="p-3">Sounding Drain (mm / Kg)</th>
+
               <th class="p-3">QTY Loss Drain (Kg)</th>
+
               <th class="p-3">Lab Washing (Phos / FFA / M&I)</th>
+
               <th class="p-3">Status</th>
+
               <th class="p-3 text-center">Aksi</th>
+
             </tr>
+
           </thead>
+
           <tbody id="historyTableBody" class="divide-y divide-slate-100">
+
             <!-- Rendered via JS -->
+
           </tbody>
+
         </table>
+
       </div>
+
     </div>
+
+
 
   </main>
 
+
+
   <!-- Modal Edit / Revisi Data Full -->
+
   <div id="editBatchModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex justify-center items-center hidden p-4">
+
     <div class="bg-white rounded-xl max-w-lg w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+
       <div class="flex justify-between items-center border-b pb-3">
+
         <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
+
           <i class="fa-solid fa-pen-to-square text-amber-500"></i> Revisi Data Batch
+
         </h3>
+
         <button onclick="closeEditModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+
       </div>
+
       <form id="editBatchForm" onsubmit="handleSaveEdit(event)" class="space-y-4">
+
         <input type="hidden" id="editBatchId">
+
         
+
         <!-- Info Utama -->
+
         <div class="grid grid-cols-2 gap-3 bg-slate-50 p-3 rounded-lg border">
+
           <div>
+
             <label class="block text-[11px] font-semibold text-slate-500 mb-1">Target Tanki</label>
+
             <select id="editTargetTank" class="w-full border p-1.5 rounded text-sm">
+
               <option value="T100-1">T100-1 (+153 mm)</option>
+
               <option value="T100-2">T100-2 (+153 mm)</option>
+
               <option value="T100-3">T100-3 (+140 mm)</option>
+
               <option value="T100-4">T100-4 (+140 mm)</option>
+
             </select>
+
           </div>
+
           <div>
+
             <label class="block text-[11px] font-semibold text-slate-500 mb-1">Asal Minyak</label>
+
             <input type="text" id="editSourceTank" class="w-full border p-1.5 rounded text-sm" required>
+
           </div>
+
         </div>
+
+
 
         <!-- 1. Data Penerimaan Awal -->
+
         <div class="border p-3 rounded-lg space-y-2">
+
           <span class="text-xs font-bold text-slate-700 block">1. Penerimaan Minyak Mentah (Feed)</span>
+
           <div class="grid grid-cols-2 gap-2">
+
             <div>
+
               <label class="block text-[10px] text-slate-500">Input Sounding Awal (mm)</label>
+
               <input type="number" id="editRawInitialSounding" class="w-full border p-1.5 rounded text-sm" required>
+
             </div>
+
             <div>
+
               <label class="block text-[10px] text-slate-500">Suhu Feed (°C)</label>
+
               <input type="number" id="editFeedTemp" class="w-full border p-1.5 rounded text-sm" required>
+
             </div>
+
             <div>
+
               <label class="block text-[10px] text-slate-500">Feed Phos (PPM)</label>
+
               <input type="number" step="0.001" id="editFeedPhos" class="w-full border p-1.5 rounded text-sm">
+
             </div>
+
             <div>
+
               <label class="block text-[10px] text-slate-500">Feed FFA (%)</label>
+
               <input type="number" step="0.01" id="editFeedFFA" class="w-full border p-1.5 rounded text-sm">
+
             </div>
+
             <div class="col-span-2">
+
               <label class="block text-[10px] text-slate-500">Feed M&I (%)</label>
+
               <input type="number" step="0.01" id="editFeedMI" class="w-full border p-1.5 rounded text-sm">
+
             </div>
+
           </div>
+
         </div>
+
+
 
         <!-- 2. Data CA & Air -->
+
         <div class="border p-3 rounded-lg space-y-2">
+
           <span class="text-xs font-bold text-blue-700 block">2. Dosis Chemical CA & Air</span>
+
           <div class="grid grid-cols-2 gap-2">
+
             <div>
+
               <label class="block text-[10px] text-slate-500">Sack CA (@25 Kg)</label>
+
               <input type="number" id="editCaSackCount" class="w-full border p-1.5 rounded text-sm">
+
             </div>
+
             <div>
+
               <label class="block text-[10px] text-slate-500">Air Tambahan (M³ / Liter)</label>
+
               <input type="number" step="0.1" id="editWaterQty" class="w-full border p-1.5 rounded text-sm">
+
             </div>
+
           </div>
+
         </div>
+
+
 
         <!-- 3. Data Drain & Washing -->
+
         <div class="border p-3 rounded-lg space-y-2">
+
           <span class="text-xs font-bold text-red-700 block">3. Drain & Washing Quality</span>
+
           <div class="grid grid-cols-2 gap-2">
+
             <div>
+
               <label class="block text-[10px] text-slate-500">Input Sounding Drain (mm)</label>
+
               <input type="number" id="editRawSoundingAfterDrain" class="w-full border p-1.5 rounded text-sm">
+
             </div>
+
             <div>
+
               <label class="block text-[10px] text-slate-500">Suhu Drain (°C)</label>
+
               <input type="number" id="editDrainTemp" class="w-full border p-1.5 rounded text-sm">
+
             </div>
+
             <div>
+
               <label class="block text-[10px] text-slate-500">Washing Phos (PPM)</label>
+
               <input type="number" step="0.001" id="editLabPhos" class="w-full border p-1.5 rounded text-sm">
+
             </div>
+
             <div>
+
               <label class="block text-[10px] text-slate-500">Washing FFA (%)</label>
+
               <input type="number" step="0.01" id="editLabFFA" class="w-full border p-1.5 rounded text-sm">
+
             </div>
+
             <div class="col-span-2">
+
               <label class="block text-[10px] text-slate-500">Washing M&I (%)</label>
+
               <input type="number" step="0.01" id="editLabMI" class="w-full border p-1.5 rounded text-sm">
+
             </div>
+
           </div>
+
         </div>
+
+
 
         <div class="pt-2 flex gap-2">
+
           <button type="button" onclick="closeEditModal()" class="w-1/2 py-2 border rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-50">Batal</button>
+
           <button type="submit" class="w-1/2 py-2 bg-amber-500 hover:bg-amber-600 text-slate-900 rounded-lg text-sm font-bold">Simpan Revisi</button>
+
         </div>
+
       </form>
+
     </div>
+
   </div>
+
+
 
   <!-- Modal Batch Baru -->
+
   <div id="newBatchModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex justify-center items-center hidden p-4">
+
     <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+
       <div class="flex justify-between items-center border-b pb-3">
+
         <h3 class="font-bold text-slate-800 text-lg">Buat Batch Baru</h3>
+
         <button onclick="closeNewBatchModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+
       </div>
+
       <form id="newBatchForm" onsubmit="handleCreateBatch(event)" class="space-y-3">
+
         <div>
+
           <label class="block text-xs font-semibold text-slate-600 mb-1">Target Tanki Washing</label>
+
           <select id="targetTank" onchange="updateBottomNotice()" class="w-full border p-2 rounded-lg text-sm font-medium">
+
             <option value="T100-1">T100-1 (+153 mm)</option>
+
             <option value="T100-2">T100-2 (+153 mm)</option>
+
             <option value="T100-3">T100-3 (+140 mm)</option>
+
             <option value="T100-4">T100-4 (+140 mm)</option>
+
           </select>
+
         </div>
+
         <div>
+
           <label class="block text-xs font-semibold text-slate-600 mb-1">Asal Minyak</label>
+
           <input type="text" id="sourceTank" placeholder="T07" required class="w-full border p-2 rounded-lg text-sm">
+
         </div>
+
         <div class="grid grid-cols-2 gap-3">
+
           <div>
+
             <label class="block text-xs font-semibold text-slate-600 mb-1">Sounding Input (mm)</label>
+
             <input type="number" step="1" id="initialSounding" placeholder="4923" required class="w-full border p-2 rounded-lg text-sm">
+
             <span class="text-[10px] text-amber-600 font-semibold mt-0.5 block" id="initialNotice">+ Bottom Offset</span>
+
           </div>
+
           <div>
+
             <label class="block text-xs font-semibold text-slate-600 mb-1">Suhu Feed (°C)</label>
+
             <input type="number" step="1" id="feedTemp" placeholder="52" required class="w-full border p-2 rounded-lg text-sm">
+
           </div>
+
         </div>
+
         <div class="border-t pt-3 space-y-2">
+
           <span class="text-xs font-bold text-indigo-700 block">Quality Feed Awal (Opsional)</span>
+
           <div class="grid grid-cols-3 gap-2">
-            <input type="number" step="0.001" id="newFeedPhos" placeholder="Phos (PPM)" class="border p-1.5 rounded text-sm">
-            <input type="number" step="0.01" id="newFeedFFA" placeholder="FFA (%)" class="border p-1.5 rounded text-sm">
-            <input type="number" step="0.01" id="newFeedMI" placeholder="M&I (%)" class="border p-1.5 rounded text-sm">
+
+            <input type="number" step="0.001" id="feedPhos" placeholder="Phos (PPM)" class="border p-1.5 rounded text-sm">
+
+            <input type="number" step="0.01" id="feedFFA" placeholder="FFA (%)" class="border p-1.5 rounded text-sm">
+
+            <input type="number" step="0.01" id="feedMI" placeholder="M&I (%)" class="border p-1.5 rounded text-sm">
+
           </div>
+
         </div>
+
         <div class="pt-3 flex gap-2">
+
           <button type="button" onclick="closeNewBatchModal()" class="w-1/2 py-2 border rounded-lg text-sm font-semibold">Batal</button>
+
           <button type="submit" class="w-1/2 py-2 bg-amber-500 text-slate-900 rounded-lg text-sm font-bold">Simpan Batch</button>
+
         </div>
+
       </form>
+
     </div>
+
   </div>
+
+
 
   <!-- Modal Input Dosis CA & Air -->
+
   <div id="dosingModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex justify-center items-center hidden p-4">
+
     <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl space-y-4">
+
       <div class="flex justify-between items-center border-b pb-3">
+
         <h3 class="font-bold text-slate-800 text-lg">Input Dosis CA & Air</h3>
+
         <button onclick="closeDosingModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+
       </div>
+
       <form id="dosingForm" onsubmit="handleSaveDosing(event)" class="space-y-3">
+
         <input type="hidden" id="dosingBatchId">
+
         <div class="grid grid-cols-2 gap-3">
+
           <div>
+
             <label class="block text-xs font-semibold text-slate-600 mb-1">Dosis Sack CA (@25 Kg)</label>
+
             <input type="number" id="caSackCount" placeholder="14" required class="border p-2 rounded-lg text-sm w-full">
+
           </div>
+
           <div>
+
             <label class="block text-xs font-semibold text-slate-600 mb-1">Air Tambahan (M³ / Liter)</label>
+
             <input type="number" step="0.1" id="waterQty" placeholder="4000" required class="border p-2 rounded-lg text-sm w-full">
+
           </div>
+
         </div>
+
         <p class="text-[11px] text-slate-500 bg-slate-50 p-2 rounded border">
+
           <i class="fa-solid fa-calculator text-amber-500"></i> Total Kg Campuran = <b>Kg Minyak Awal + (Sack CA x 25 Kg) + Kg Air</b>. Sounding campuran akan dikalkulasi otomatis.
+
         </p>
+
         <div class="pt-3 flex gap-2">
+
           <button type="button" onclick="closeDosingModal()" class="w-1/2 py-2 border rounded-lg text-sm font-semibold">Batal</button>
+
           <button type="submit" class="w-1/2 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold">Simpan</button>
+
         </div>
+
       </form>
+
     </div>
+
   </div>
+
+
 
   <!-- Modal Stop Drain -->
+
   <div id="stopDrainModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex justify-center items-center hidden p-4">
+
     <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl space-y-4">
+
       <div class="flex justify-between items-center border-b pb-3">
+
         <h3 class="font-bold text-slate-800 text-lg">Stop Drain & Sounding Akhir</h3>
+
         <button onclick="closeStopDrainModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+
       </div>
+
       <form id="stopDrainForm" onsubmit="handleSaveStopDrain(event)" class="space-y-3">
+
         <input type="hidden" id="stopDrainBatchId">
+
         <div class="grid grid-cols-2 gap-3">
+
           <input type="number" id="soundingAfterDrain" placeholder="Sounding Drain (mm)" required class="border p-2 rounded-lg text-sm">
+
           <input type="number" id="drainTemp" placeholder="Suhu Drain (°C)" required class="border p-2 rounded-lg text-sm">
+
         </div>
+
         <div class="pt-3 flex gap-2">
+
           <button type="button" onclick="closeStopDrainModal()" class="w-1/2 py-2 border rounded-lg text-sm font-semibold">Batal</button>
+
           <button type="submit" class="w-1/2 py-2 bg-red-600 text-white rounded-lg text-sm font-bold">Kalkulasi Loss</button>
+
         </div>
+
       </form>
+
     </div>
+
   </div>
+
+
 
   <!-- Modal Input Lab Washing -->
+
   <div id="labModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex justify-center items-center hidden p-4">
+
     <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl space-y-4">
+
       <div class="flex justify-between items-center border-b pb-3">
+
         <h3 class="font-bold text-slate-800 text-lg">Input Hasil Lab Washing</h3>
+
         <button onclick="closeLabModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+
       </div>
+
       <form id="labForm" onsubmit="handleSaveLab(event)" class="space-y-3">
+
         <input type="hidden" id="labBatchId">
+
         <div class="grid grid-cols-3 gap-2">
+
           <input type="number" step="0.001" id="labPhos" placeholder="Phos (PPM)" required class="border p-2 rounded-lg text-sm">
+
           <input type="number" step="0.01" id="labFFA" placeholder="FFA (%)" required class="border p-2 rounded-lg text-sm">
+
           <input type="number" step="0.01" id="labMI" placeholder="M&I (%)" required class="border p-2 rounded-lg text-sm">
+
         </div>
+
         <div class="pt-3 flex gap-2">
+
           <button type="button" onclick="closeLabModal()" class="w-1/2 py-2 border rounded-lg text-sm font-semibold">Batal</button>
+
           <button type="submit" class="w-1/2 py-2 bg-indigo-600 text-white rounded-lg text-sm font-bold">Simpan</button>
+
         </div>
+
       </form>
+
     </div>
+
   </div>
 
+
+
   <script>
+
     const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbx6-Nd3BjZls8yR4SlkIeZs_ohH0ajfpga77mHu5uCp5ceWxOJvErPVP5826AxVwhUA/exec";
 
+
+
     function getTankBottomOffset(tankName) {
+
       if (tankName === 'T100-1' || tankName === 'T100-2') return 153;
+
       if (tankName === 'T100-3' || tankName === 'T100-4') return 140;
+
       return 0;
+
     }
+
+
 
     const POME_DENSITY = {
+
       20: 0.9094, 21: 0.9087, 22: 0.9080, 23: 0.9073, 24: 0.9066, 25: 0.9059,
+
       26: 0.9052, 27: 0.9045, 28: 0.9038, 29: 0.9031, 30: 0.9024, 31: 0.9018,
+
       32: 0.9011, 33: 0.9004, 34: 0.8997, 35: 0.8990, 36: 0.8984, 37: 0.8977,
+
       38: 0.8970, 39: 0.8963, 40: 0.8956, 41: 0.8950, 42: 0.8943, 43: 0.8936,
+
       44: 0.8929, 45: 0.8922, 46: 0.8916, 47: 0.8909, 48: 0.8902, 49: 0.8895,
+
       50: 0.8888, 51: 0.8882, 52: 0.8875, 53: 0.8868, 54: 0.8861, 55: 0.8854,
+
       56: 0.8848, 57: 0.8841, 58: 0.8834, 59: 0.8827, 60: 0.8820, 61: 0.8814,
+
       62: 0.8807, 63: 0.8800, 64: 0.8793, 65: 0.8786, 66: 0.8780, 67: 0.8773,
+
       68: 0.8766, 69: 0.8759, 70: 0.8752
+
     };
+
+
 
     const TANK_100_1_BASE_CM = {
+
       0:0, 1:7, 2:14, 3:21, 4:29, 5:37, 6:45, 7:53, 8:61, 9:69, 10:77, 11:85, 12:93, 13:101, 14:109, 15:117,
+
       16:125, 17:133, 18:141, 19:149, 20:157, 21:165, 22:173, 23:182, 24:191, 25:200, 26:210, 27:220, 28:230,
+
       29:240, 30:250, 31:260, 32:270, 33:280, 34:290, 35:300, 36:310, 37:320, 38:330, 39:340, 40:350, 41:360,
+
       42:370, 43:380, 44:390, 45:400, 46:410, 47:420, 48:430, 49:440, 50:450, 51:460, 52:470, 53:480, 54:490,
+
       55:500, 56:510, 57:520, 58:530, 59:540, 60:550, 61:560, 62:570, 63:580, 64:590, 65:600, 66:610, 67:620,
+
       68:630, 69:640, 70:650, 71:660, 72:670, 73:680, 74:690, 75:700, 76:710, 77:720, 78:730, 79:740, 80:750,
+
       81:760, 82:770, 83:780, 84:790, 85:800, 86:810, 87:821, 88:832, 89:843, 90:854, 91:865, 92:876, 93:887,
+
       94:898, 95:909, 96:920, 97:931, 98:942, 99:955, 100:968, 101:981, 102:994, 103:1007, 104:1020, 105:1033,
+
       106:1046, 107:1061, 108:1076, 109:1091, 110:1106, 111:1121, 112:1136, 113:1151, 114:1166, 115:1181,
+
       116:1196, 117:1211, 118:1226, 119:1241, 120:1256, 121:1271, 122:1291, 123:1311, 124:1331, 125:1351,
+
       126:1371, 127:1391, 128:1411, 129:1431, 130:1454, 131:1477, 132:1500, 133:1523, 134:1546, 135:1571,
+
       136:1596, 137:1621, 138:1650, 139:1679, 140:1708, 141:1737, 142:1766, 143:1795, 144:1824, 145:2185,
+
       146:2583, 147:3016, 148:3485, 149:3992, 150:4537, 151:5121, 152:5743, 153:6359, 154:6525, 155:6690,
+
       156:6855, 157:7021, 158:7186, 159:7351, 160:7516, 161:7682, 162:7847, 163:8012, 164:8177, 165:8343,
+
       166:8508, 167:8673, 168:8839, 169:9004, 170:9169, 171:9334, 172:9500, 173:9665, 174:9830, 175:9995,
+
       176:10161, 177:10326, 178:10491, 179:10656, 180:10822, 181:10987, 182:11152, 183:11318, 184:11483,
+
       185:11648, 186:11813, 187:11979, 188:12144, 189:12309, 190:12474, 191:12640, 192:12805, 193:12970,
+
       194:13135, 195:13301, 196:13466, 197:13631, 198:13797, 199:13962, 200:14127, 201:14292, 202:14458,
+
       203:14623, 204:14788, 205:14953, 206:15119, 207:15284, 208:15449, 209:15614, 210:15780, 211:15945,
+
       212:16110, 213:16276, 214:16441, 215:16606, 216:16771, 217:16937, 218:17102, 219:17267, 220:17432,
+
       221:17598, 222:17763, 223:17928, 224:18094, 225:18259, 226:18424, 227:18589, 228:18755, 229:18920,
+
       230:19085, 231:19250, 232:19416, 233:19581, 234:19746, 235:19911, 236:20077, 237:20242, 238:20407,
+
       239:20573, 240:20738, 241:20903, 242:21068, 243:21234, 244:21399, 245:21564, 246:21729, 247:21895,
+
       248:22060, 249:22225, 250:22390, 251:22556, 252:22721, 253:22886, 254:23052, 255:23217, 256:23382,
+
       257:23547, 258:23713, 259:23878, 260:24043, 261:24208, 262:24374, 263:24539, 264:24704, 265:24870,
+
       266:25035, 267:25200, 268:25365, 269:25531, 270:25696, 271:25861, 272:26026, 273:26192, 274:26357,
+
       275:26522, 276:26687, 277:26853, 278:27018, 279:27183, 280:27349, 281:27514, 282:27679, 283:27844,
+
       284:28010, 285:28175, 286:28340, 287:28505, 288:28671, 289:28836, 290:29001, 291:29166, 292:29332,
+
       293:29497, 294:29662, 295:29828, 296:29993, 297:30158, 298:30323, 299:30489, 300:30654, 301:30819,
+
       302:30984, 303:31150, 304:31315, 305:31480, 306:31645, 307:31811, 308:31976, 309:32141, 310:32307,
+
       311:32472, 312:32637, 313:32802, 314:32968, 315:33133, 316:33298, 317:33463, 318:33629, 319:33794,
+
       320:33959, 321:34125, 322:34290, 323:34455, 324:34620, 325:34786, 326:34951, 327:35116, 328:35281,
+
       329:35447, 330:35612, 331:35777, 332:35942, 333:36108, 334:36273, 335:36438, 336:36604, 337:36769,
+
       338:36934, 339:37099, 340:37265, 341:37430, 342:37595, 343:37760, 344:37926, 345:38091, 346:38256,
+
       347:38421, 348:38587, 349:38752, 350:38917, 351:39083, 352:39248, 353:39413, 354:39578, 355:39744,
+
       356:39909, 357:40074, 358:40239, 359:40405, 360:40570, 361:40735, 362:40901, 363:41066, 364:41231,
+
       365:41396, 366:41562, 367:41727, 368:41892, 369:42057, 370:42223, 371:42388, 372:42553, 373:42718,
+
       374:42884, 375:43049, 376:43214, 377:43380, 378:43545, 379:43710, 380:43875, 381:44041, 382:44206,
+
       383:44371, 384:44536, 385:44702, 386:44867, 387:45032, 388:45197, 389:45363, 390:45528, 391:45693,
+
       392:45859, 393:46024, 394:46189, 395:46354, 396:46520, 397:46685, 398:46850, 399:47015, 400:47181,
+
       401:47346, 402:47511, 403:47676, 404:47842, 405:48007, 406:48172, 407:48338, 408:48503, 409:48668,
+
       410:48833, 411:48999, 412:49164, 413:49329, 414:49494, 415:49660, 416:49825, 417:49990, 418:50156,
+
       419:50321, 420:50486, 421:50651, 422:50817, 423:50982, 424:51147, 425:51312, 426:51478, 427:51643,
+
       428:51808, 429:51973, 430:52139, 431:52304, 432:52469, 433:52635, 434:52800, 435:52965, 436:53130,
+
       437:53296, 438:53461, 439:53626, 440:53791, 441:53957, 442:54122, 443:54287, 444:54452, 445:54618,
+
       446:54783, 447:54948, 448:55114, 449:55279, 450:55444, 451:55609, 452:55775, 453:55940, 454:56105,
+
       455:56270, 456:56436, 457:56601, 458:56766, 459:56931, 460:57097, 461:57262, 462:57427, 463:57593,
+
       464:57758, 465:57923, 466:58088, 467:58254, 468:58419, 469:58584, 470:58749, 471:58915, 472:59080,
+
       473:59245, 474:59411, 475:59576, 476:59741, 477:59906, 478:60072, 479:60237, 480:60402, 481:60567,
+
       482:60733, 483:60898, 484:61063, 485:61228, 486:61394, 487:61559, 488:61724, 489:61890, 490:62055,
+
       491:62220, 492:62385, 493:62551, 494:62716, 495:62881, 496:63046, 497:63212, 498:63377, 499:63542,
+
       500:63707, 501:63873, 502:64038, 503:64203, 504:64369, 505:64534, 506:64699, 507:64864, 508:65030,
+
       509:65195, 510:65360, 511:65525, 512:65691, 513:65856, 514:66021, 515:66187, 516:66352, 517:66517,
+
       518:66682, 519:66848, 520:67013, 521:67178, 522:67343, 523:67509, 524:67674, 525:67839, 526:68004,
+
       527:68170, 528:68335, 529:68500, 530:68666, 531:68831, 532:68996, 533:69161, 534:69327, 535:69492,
+
       536:69657, 537:69822, 538:69988, 539:70153, 540:70318, 541:70483, 542:70649, 543:70814, 544:70979,
+
       545:71145, 546:71310, 547:71475, 548:71640, 549:71806, 550:71971, 551:72136, 552:72301, 553:72467,
+
       554:72632, 555:72797, 556:72962, 557:73128, 558:73293, 559:73458, 560:73624, 561:73789, 562:73954,
+
       563:74119, 564:74285, 565:74450, 566:74615, 567:74780, 568:74946, 569:75111, 570:75276, 571:75442,
+
       572:75607, 573:75772, 574:75937, 575:76103, 576:76268, 577:76433, 578:76598, 579:76764, 580:76929,
+
       581:77094, 582:77259, 583:77425, 584:77590, 585:77755, 586:77921, 587:78086, 588:78251, 589:78416,
+
       590:78582, 591:78747, 592:78912, 593:79077, 594:79243, 595:79408, 596:79573, 597:79738, 598:79904,
+
       599:80069, 600:80234, 601:80400, 602:80565, 603:80730, 604:80895, 605:81061, 606:81226, 607:81391,
+
       608:81556, 609:81722, 610:81887, 611:82052, 612:82218, 613:82383, 614:82548, 615:82713, 616:82879,
+
       617:83044, 618:83209, 619:83374, 620:83540, 621:83705, 622:83870, 623:84035, 624:84201, 625:84366,
+
       626:84531, 627:84697, 628:84862, 629:85027, 630:85192, 631:85358, 632:85523, 633:85688, 634:85853,
+
       635:86019, 636:86184, 637:86349, 638:86514, 639:86680, 640:86845, 641:87010, 642:87176, 643:87341,
+
       644:87506, 645:87671, 646:87837, 647:88002, 648:88167, 649:88332, 650:88498, 651:88663, 652:88828,
+
       653:88993, 654:89159, 655:89324, 656:89489, 657:89655, 658:89820, 659:89985, 660:90150, 661:90316,
+
       662:90481, 663:90646, 664:90811, 665:90977, 666:91142, 667:91307, 668:91473, 669:91638, 670:91803,
+
       671:91968, 672:92134, 673:92299, 674:92464, 675:92629, 676:92795, 677:92960, 678:93125, 679:93290,
+
       680:93456, 681:93621, 682:93786, 683:93952, 684:94117, 685:94282, 686:94447, 687:94613, 688:94778,
+
       689:94943, 690:95108, 691:95274, 692:95439, 693:95604, 694:95769, 695:95935, 696:96100, 697:96265,
+
       698:96431, 699:96596, 700:96761, 701:96926, 702:97092, 703:97257, 704:97422, 705:97587, 706:97753,
+
       707:97918, 708:98083, 709:98248, 710:98414, 711:98579, 712:98744, 713:98910, 714:99075, 715:99240,
+
       716:99405, 717:99571, 718:99736, 719:99901, 720:100066, 721:100232, 722:100397, 723:100562, 724:100728,
+
       725:100893, 726:101058, 727:101223, 728:101389, 729:101554, 730:101719, 731:101884, 732:102050,
+
       733:102215, 734:102380, 735:102545, 736:102711, 737:102876, 738:103041, 739:103207, 740:103372,
+
       741:103537, 742:103702, 743:103868, 744:104033, 745:104198, 746:104363, 747:104529, 748:104694,
+
       749:104859, 750:105024, 751:105190, 752:105355, 753:105520, 754:105686, 755:105851, 756:106016,
+
       757:106181, 758:106347, 759:106512, 760:106677, 761:106842, 762:107008, 763:107173, 764:107338,
+
       765:107504, 766:107669, 767:107834, 768:107999, 769:108165, 770:108330, 771:108495, 772:108660,
+
       773:108826, 774:108991, 775:109156, 776:109321, 777:109487, 778:109652, 779:109817, 780:109983,
+
       781:110148, 782:110313, 783:110478, 784:110644, 785:110809, 786:110974, 787:111139, 788:111305,
+
       789:111470, 790:111635, 791:111800, 792:111966, 793:112131, 794:112296, 795:112462, 796:112627,
+
       797:112792, 798:112957, 799:113123, 800:113288, 801:113453, 802:113618, 803:113784, 804:113949,
+
       805:114114, 806:114279, 807:114445, 808:114610, 809:114775, 810:114941, 811:115106, 812:115271,
+
       813:115436, 814:115602, 815:115767, 816:115932, 817:116097, 818:116263, 819:116428, 820:116593,
+
       821:116759, 822:116924, 823:117089, 824:117254, 825:117420, 826:117585, 827:117750, 828:117915,
+
       829:118081, 830:118246, 831:118411, 832:118576, 833:118742, 834:118907, 835:119072, 836:119238,
+
       837:119403, 838:119568, 839:119733, 840:119899, 841:120064, 842:120229, 843:120394, 844:120560,
+
       845:120725, 846:120890, 847:121055, 848:121221, 849:121386, 850:121551, 851:121717, 852:121882,
+
       853:122047, 854:122212, 855:122378, 856:122543, 857:122708, 858:122873, 859:123039, 860:123204,
+
       861:123369, 862:123535, 863:123700, 864:123865, 865:124030, 866:124196, 867:124361, 868:124526,
+
       869:124691, 870:124857, 871:125022, 872:125187, 873:125352, 874:125518, 875:125683, 876:125848,
+
       877:126014, 878:126179, 879:126344, 880:126509, 881:126675, 882:126840, 883:127005, 884:127170,
+
       885:127336, 886:127501, 887:127666, 888:127831, 889:127997
+
     };
 
+
+
     function getMMFractionLiter(soundingMM) {
+
       const mmRemainder = soundingMM % 10;
+
       if (mmRemainder === 0) return 0;
+
       const meterVal = soundingMM / 1000;
+
       if (meterVal < 0.75) return [0, 1.1, 2.2, 3.3, 4.4, 5.5, 6.6, 7.7, 8.8, 9.9][mmRemainder] || 0;
+
       if (meterVal < 1.5) return [0, 2.1, 3.2, 4.3, 5.4, 6.5, 7.6, 8.7, 9.8, 10.9][mmRemainder] || 0;
+
       if (meterVal < 6.0) return [0, 3.1, 4.2, 5.3, 6.4, 7.5, 8.6, 9.7, 10.8, 11.9][mmRemainder] || 0;
+
       return [0, 3.8, 4.9, 6.0, 7.1, 8.2, 9.3, 10.4, 11.5, 12.6][mmRemainder] || 0;
+
     }
+
+
 
     function lookupLiterT100_1(soundingMM) {
+
       if (!soundingMM || soundingMM <= 0) return 0;
+
       const baseCM = Math.floor(soundingMM / 10);
+
       const baseLiter = TANK_100_1_BASE_CM[baseCM] !== undefined ? TANK_100_1_BASE_CM[baseCM] : (baseCM * 143.8);
+
       const fractionLiter = getMMFractionLiter(soundingMM);
+
       return Math.round(baseLiter + fractionLiter);
+
     }
+
+
+
+    // Mencari Sounding mm berdasarkan estimasi Liter dari total massa Campuran
 
     function reverseLookupMMFromLiter(targetLiter) {
+
       if (!targetLiter || targetLiter <= 0) return 0;
+
       let closestMM = 0;
+
       let minDiff = Infinity;
 
+
+
       for (let cm = 0; cm <= 889; cm++) {
+
         const baseLiter = TANK_100_1_BASE_CM[cm] !== undefined ? TANK_100_1_BASE_CM[cm] : (cm * 143.8);
+
         const diff = Math.abs(baseLiter - targetLiter);
+
         if (diff < minDiff) {
+
           minDiff = diff;
+
           closestMM = cm * 10;
+
         }
+
       }
+
       return closestMM;
+
     }
+
+
 
     function getPOMEDensity(tempC) {
+
       const rounded = Math.round(tempC);
+
       if (POME_DENSITY[rounded]) return POME_DENSITY[rounded];
+
       if (rounded < 20) return 0.9094;
+
       return 0.8752;
+
     }
+
+
 
     function calculateVCF(tempC) {
+
       if (!tempC) return 1.0;
+
       return 1 + ((tempC - 40) * 0.0000335);
+
     }
+
+
 
     function calculateExactKgWithOffset(rawInputMM, tempC, tankName) {
+
       if (rawInputMM === undefined || rawInputMM === null || isNaN(rawInputMM) || !tempC) {
+
         return { rawMM: 0, finalMM: 0, offset: 0, liter: 0, vcf: 1, density: 0, kg: 0 };
+
       }
+
       const offset = getTankBottomOffset(tankName);
+
       const finalMM = rawInputMM + offset;
+
       const liter = lookupLiterT100_1(finalMM);
+
       const vcf = calculateVCF(tempC);
+
       const density = getPOMEDensity(tempC);
+
       const kg = Math.round(liter * density * vcf);
+
       return { rawMM: rawInputMM, finalMM, offset, liter, vcf, density, kg };
+
     }
 
-    let batches = [];
-    try {
-      batches = JSON.parse(localStorage.getItem('wp_batches_v8')) || [];
-    } catch(err) {
-      batches = [];
-    }
+
+
+    let batches = JSON.parse(localStorage.getItem('wp_batches_v8')) || [];
+
+
 
     function saveState() {
+
       localStorage.setItem('wp_batches_v8', JSON.stringify(batches));
+
       renderApp();
+
     }
+
+
 
     function renderApp() {
+
       renderActiveBatches();
+
       renderTable();
+
     }
+
+
+
+    // --- Google Sheets Auto Backup Webhook ---
 
     function syncToGoogleSheets(batchData) {
+
       if (!GOOGLE_SHEET_URL) return;
+
       const initCalc = calculateExactKgWithOffset(batchData.rawInitialSounding, batchData.feedTemp, batchData.targetTank);
+
       
+
+      // Kalkulasi Campuran
+
       const caKg = (batchData.caSackCount || 0) * 25;
+
       const waterKg = batchData.waterQty <= 100 ? (batchData.waterQty || 0) * 1000 : (batchData.waterQty || 0);
+
       const mixKgTotal = batchData.status !== 'INITIAL' ? (initCalc.kg + caKg + waterKg) : 0;
+
       const mixCalc = calculateExactKgWithOffset(batchData.rawSoundingAfterDosing, batchData.mixTemp, batchData.targetTank);
 
+
+
       const drainCalc = calculateExactKgWithOffset(batchData.rawSoundingAfterDrain, batchData.drainTemp, batchData.targetTank);
+
       const qtyLossKg = (mixKgTotal && drainCalc.kg) ? (mixKgTotal - drainCalc.kg) : 0;
 
+
+
       const payload = {
+
         id: batchData.id,
-        createdAt: batchData.createdAt || new Date().toISOString(),
+
         targetTank: batchData.targetTank,
+
         sourceTank: batchData.sourceTank,
+
         rawInitialSounding: batchData.rawInitialSounding,
+
         initFinalMM: initCalc.finalMM,
+
         feedTemp: batchData.feedTemp,
+
         initKg: initCalc.kg,
+
         feedPhos: batchData.feedLab ? batchData.feedLab.phos : '',
+
         feedFFA: batchData.feedLab ? batchData.feedLab.ffa : '',
+
         feedMI: batchData.feedLab ? batchData.feedLab.mi : '',
+
         caSackCount: batchData.caSackCount || 0,
+
         waterQty: batchData.waterQty || 0,
+
         rawSoundingAfterDosing: batchData.rawSoundingAfterDosing || 0,
+
         mixFinalMM: mixCalc.finalMM,
+
         mixTemp: batchData.mixTemp || 0,
+
         mixKg: mixKgTotal,
+
         rawSoundingAfterDrain: batchData.rawSoundingAfterDrain || 0,
+
         drainFinalMM: drainCalc.finalMM,
+
         drainTemp: batchData.drainTemp || 0,
+
         drainKg: drainCalc.kg,
+
         qtyLossKg: qtyLossKg,
+
         washingPhos: batchData.lab ? batchData.lab.phos : '',
+
         washingFFA: batchData.lab ? batchData.lab.ffa : '',
+
         washingMI: batchData.lab ? batchData.lab.mi : '',
+
         status: batchData.status
+
       };
 
+
+
       fetch(GOOGLE_SHEET_URL, {
+
         method: "POST",
+
         mode: "no-cors",
+
         headers: { "Content-Type": "application/json" },
+
         body: JSON.stringify(payload)
+
       }).catch(err => console.log("Sheet Sync Error:", err));
+
     }
 
-    function formatLabText(labObj) {
-      if (!labObj) return 'Belum diisi';
-      const p = labObj.phos !== null && labObj.phos !== undefined ? labObj.phos : '-';
-      const f = labObj.ffa !== null && labObj.ffa !== undefined ? labObj.ffa : '-';
-      const m = labObj.mi !== null && labObj.mi !== undefined ? labObj.mi : '-';
-      if (p === '-' && f === '-' && m === '-') return 'Belum diisi';
-      return `Phos: ${p} ppm | FFA: ${f}% | M&I: ${m}%`;
-    }
+
 
     function renderActiveBatches() {
+
       const container = document.getElementById('activeBatchesContainer');
-      if (!container) return;
+
       container.innerHTML = '';
+
       const activeList = batches.filter(b => b.status !== 'COMPLETED');
 
+
+
       if (activeList.length === 0) {
+
         container.innerHTML = `<div class="col-span-full py-8 text-center text-slate-400 text-sm">Tidak ada batch aktif saat ini.</div>`;
+
         return;
+
       }
 
+
+
       activeList.forEach(b => {
+
         let statusBadge = '';
+
         let actionButtons = '';
 
+
+
         const initCalc = calculateExactKgWithOffset(b.rawInitialSounding, b.feedTemp, b.targetTank);
+
         
-        const caKg = (b.caSackCount || 0) * 25;
-        const waterKg = b.waterQty <= 100 ? (b.waterQty || 0) * 1000 : (b.waterQty || 0);
+
+        // Perhitungan Total Kg Campuran = Minyak Awal (Kg) + CA (Kg) + Air (Kg)
+
+        const caKg = (b.caSackCount || 0) * 25; // 1 Sack = 25 Kg
+
+        const waterKg = b.waterQty <= 100 ? (b.waterQty || 0) * 1000 : (b.waterQty || 0); // Air 1 Liter/M3 = 1 Kg (Densitas = 1)
+
         const mixKgTotal = b.caSackCount || b.waterQty ? (initCalc.kg + caKg + waterKg) : null;
 
+
+
         const mixCalc = calculateExactKgWithOffset(b.rawSoundingAfterDosing, b.mixTemp, b.targetTank);
+
         const drainCalc = calculateExactKgWithOffset(b.rawSoundingAfterDrain, b.drainTemp, b.targetTank);
+
         
+
+        // QTY Loss = Total Campuran (Kg) - Drain Sounding Akhir (Kg)
+
         const qtyLossKg = (mixKgTotal && drainCalc.kg) ? (mixKgTotal - drainCalc.kg) : '-';
 
+
+
         if (b.status === 'INITIAL') {
+
           statusBadge = `<span class="bg-slate-100 text-slate-700 text-xs px-2.5 py-1 rounded-full font-semibold">Penerimaan Feed</span>`;
+
           actionButtons = `
+
             <button onclick="openDosingModal('${b.id}')" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-xs font-bold transition flex justify-center items-center gap-1.5">
+
               <i class="fa-solid fa-flask"></i> Input Dosis CA & Air
+
             </button>`;
+
         } else if (b.status === 'SEDIMENTATION') {
+
           statusBadge = `<span class="bg-blue-100 text-blue-700 text-xs px-2.5 py-1 rounded-full font-semibold">Sedimentasi</span>`;
+
           actionButtons = `
+
             <button onclick="startDrain('${b.id}')" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-lg text-xs font-bold transition flex justify-center items-center gap-1.5 shadow-md">
+
               <i class="fa-solid fa-play"></i> ▶ START DRAIN OTOMATIS
+
             </button>`;
+
         } else if (b.status === 'DRAINING') {
+
           statusBadge = `<span class="bg-amber-100 text-amber-800 text-xs px-2.5 py-1 rounded-full font-semibold animate-pulse">⚡ Sedang Drain...</span>`;
+
           actionButtons = `
+
             <button onclick="openStopDrainModal('${b.id}')" class="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg text-xs font-bold transition flex justify-center items-center gap-1.5 shadow-md">
+
               <i class="fa-solid fa-stop"></i> ⏹ STOP DRAIN & SOUNDING
+
             </button>`;
+
         } else if (b.status === 'DRAINED' || b.status === 'READY_TRANSFER') {
+
           statusBadge = `<span class="bg-emerald-100 text-emerald-800 text-xs px-2.5 py-1 rounded-full font-semibold">Siap Transfer</span>`;
+
           actionButtons = `
+
             <div class="grid grid-cols-2 gap-2">
+
               <button onclick="openLabModal('${b.id}')" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 py-2 rounded-lg text-xs font-bold transition border border-indigo-200">
+
                 <i class="fa-solid fa-vial"></i> Input Lab Washing
+
               </button>
+
               <button onclick="sendToWhatsApp('${b.id}')" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 py-2 rounded-lg text-xs font-bold transition border border-emerald-200">
+
                 <i class="fa-brands fa-whatsapp"></i> Kirim WA
+
               </button>
+
             </div>
+
             <button onclick="completeBatch('${b.id}')" class="w-full mt-2 bg-slate-800 hover:bg-slate-900 text-white py-2 rounded-lg text-xs font-bold transition">
+
               Selesaikan Batch
+
             </button>`;
+
         }
 
+
+
         const card = document.createElement('div');
+
         card.className = "bg-white border border-slate-200 rounded-xl p-4 shadow-sm space-y-3";
+
         card.innerHTML = `
+
           <div class="flex justify-between items-start">
+
             <div>
+
               <span class="text-xs font-mono font-bold text-slate-400">${b.id}</span>
+
               <h3 class="text-lg font-extrabold text-slate-800">${b.targetTank}</h3>
+
             </div>
+
             <div class="flex items-center gap-1">
+
               ${statusBadge}
+
               <button onclick="openEditModal('${b.id}')" title="Edit / Revisi Data" class="text-amber-600 hover:text-amber-800 p-1 rounded bg-amber-50 border border-amber-200 text-xs">
+
                 <i class="fa-solid fa-pen-to-square"></i>
+
               </button>
+
             </div>
+
           </div>
+
           <div class="grid grid-cols-2 gap-2 text-xs bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+
             <div><span class="text-slate-400 block">Asal Tank:</span><span class="font-semibold">${b.sourceTank}</span></div>
+
             <div><span class="text-slate-400 block">Awal (Final mm/Kg):</span><span class="font-semibold">${initCalc.finalMM} mm<br><b>${initCalc.kg.toLocaleString('id-ID')} Kg</b></span></div>
+
             <div class="col-span-2 text-indigo-700 bg-indigo-50 p-1.5 rounded font-medium">
-              <b>Lab Feed Awal:</b> ${formatLabText(b.feedLab)}
+
+              <b>Lab Feed Awal:</b> ${b.feedLab && (b.feedLab.phos || b.feedLab.ffa || b.feedLab.mi) ? `Phos: ${b.feedLab.phos || '-'} ppm | FFA: ${b.feedLab.ffa \vert{}\vert{} '-'}\% \vert{} M&I:${b.feedLab.mi || '-'}%` : 'Belum diisi'}
+
             </div>
+
             <div><span class="text-slate-400 block">Dosis CA & Air:</span><span class="font-semibold">${b.caSackCount ? b.caSackCount + ' Sack (' + caKg + ' Kg) / ' + b.waterQty + ' M³ (' + waterKg.toLocaleString('id-ID') + ' Kg)' : '-'}</span></div>
+
             <div><span class="text-slate-400 block">Campuran (Sounding/Total Kg):</span><span class="font-semibold text-blue-800">${mixCalc.finalMM ? mixCalc.finalMM + ' mm<br><b>' + mixKgTotal.toLocaleString('id-ID') + ' Kg</b>' : '-'}</span></div>
+
             <div><span class="text-slate-400 block">Drain (Final mm/Kg):</span><span class="font-semibold">${drainCalc.finalMM ? drainCalc.finalMM + ' mm (' + drainCalc.kg.toLocaleString('id-ID') + ' Kg)' : '-'}</span></div>
+
             <div class="col-span-2 text-red-700 bg-red-50 p-1.5 rounded font-extrabold text-center">
+
               🔥 Total QTY Loss Drain: ${typeof qtyLossKg === 'number' ? qtyLossKg.toLocaleString('id-ID') + ' Kg' : '-'}
+
             </div>
+
           </div>
+
           ${actionButtons}
+
         `;
+
         container.appendChild(card);
+
       });
+
     }
+
+
+
+    // --- Modal Edit / Revisi Full ---
 
     function openEditModal(batchId) {
+
       const b = batches.find(x => x.id === batchId);
+
       if (!b) return;
 
+
+
       document.getElementById('editBatchId').value = b.id;
+
       document.getElementById('editTargetTank').value = b.targetTank;
+
       document.getElementById('editSourceTank').value = b.sourceTank;
+
       document.getElementById('editRawInitialSounding').value = b.rawInitialSounding || '';
+
       document.getElementById('editFeedTemp').value = b.feedTemp || '';
+
       document.getElementById('editFeedPhos').value = b.feedLab ? b.feedLab.phos || '' : '';
+
       document.getElementById('editFeedFFA').value = b.feedLab ? b.feedLab.ffa || '' : '';
+
       document.getElementById('editFeedMI').value = b.feedLab ? b.feedLab.mi || '' : '';
 
+
+
       document.getElementById('editCaSackCount').value = b.caSackCount || '';
+
       document.getElementById('editWaterQty').value = b.waterQty || '';
 
+
+
       document.getElementById('editRawSoundingAfterDrain').value = b.rawSoundingAfterDrain || '';
+
       document.getElementById('editDrainTemp').value = b.drainTemp || '';
+
       document.getElementById('editLabPhos').value = b.lab ? b.lab.phos || '' : '';
+
       document.getElementById('editLabFFA').value = b.lab ? b.lab.ffa || '' : '';
+
       document.getElementById('editLabMI').value = b.lab ? b.lab.mi || '' : '';
 
+
+
       document.getElementById('editBatchModal').classList.remove('hidden');
+
     }
+
+
 
     function closeEditModal() { document.getElementById('editBatchModal').classList.add('hidden'); }
 
+
+
     function handleSaveEdit(e) {
+
       e.preventDefault();
+
       const id = document.getElementById('editBatchId').value;
+
       const b = batches.find(x => x.id === id);
+
       if (b) {
+
         b.targetTank = document.getElementById('editTargetTank').value;
+
         b.sourceTank = document.getElementById('editSourceTank').value;
+
         b.rawInitialSounding = parseInt(document.getElementById('editRawInitialSounding').value);
+
         b.feedTemp = parseInt(document.getElementById('editFeedTemp').value);
 
+
+
         const feedPhos = document.getElementById('editFeedPhos').value;
+
         const feedFFA = document.getElementById('editFeedFFA').value;
+
         const feedMI = document.getElementById('editFeedMI').value;
+
         b.feedLab = {
+
           phos: feedPhos ? parseFloat(feedPhos) : null,
+
           ffa: feedFFA ? parseFloat(feedFFA) : null,
+
           mi: feedMI ? parseFloat(feedMI) : null
+
         };
+
+
 
         const caSack = document.getElementById('editCaSackCount').value;
+
         if (caSack) b.caSackCount = parseInt(caSack);
+
         const water = document.getElementById('editWaterQty').value;
+
         if (water) {
+
           b.waterQty = parseFloat(water);
+
+          // Auto Calculate Sounding Campuran
+
           const initCalc = calculateExactKgWithOffset(b.rawInitialSounding, b.feedTemp, b.targetTank);
+
           const waterInLiters = b.waterQty <= 100 ? b.waterQty * 1000 : b.waterQty;
+
           const totalMixVolumeInLiter = initCalc.liter + waterInLiters;
+
           const offset = getTankBottomOffset(b.targetTank);
+
           const totalFinalMM = reverseLookupMMFromLiter(totalMixVolumeInLiter);
+
           b.rawSoundingAfterDosing = Math.max(0, totalFinalMM - offset);
+
           b.mixTemp = b.feedTemp;
+
         }
+
+
 
         const rawDrain = document.getElementById('editRawSoundingAfterDrain').value;
+
         if (rawDrain) b.rawSoundingAfterDrain = parseInt(rawDrain);
+
         const drainT = document.getElementById('editDrainTemp').value;
+
         if (drainT) b.drainTemp = parseInt(drainT);
 
+
+
         const labPhos = document.getElementById('editLabPhos').value;
+
         const labFFA = document.getElementById('editLabFFA').value;
+
         const labMI = document.getElementById('editLabMI').value;
+
         if (labPhos || labFFA || labMI) {
+
           b.lab = {
+
             phos: labPhos ? parseFloat(labPhos) : null,
+
             ffa: labFFA ? parseFloat(labFFA) : null,
+
             mi: labMI ? parseFloat(labMI) : null
+
           };
+
         }
+
+
 
         closeEditModal();
+
         saveState();
+
         syncToGoogleSheets(b);
+
       }
+
     }
+
+
 
     function startDrain(batchId) {
+
       const b = batches.find(x => x.id === batchId);
+
       if (b) {
+
         b.drainStartTime = new Date().toISOString();
+
         b.status = 'DRAINING';
+
         saveState();
+
         syncToGoogleSheets(b);
+
       }
+
     }
+
+
 
     function openStopDrainModal(batchId) {
+
       document.getElementById('stopDrainBatchId').value = batchId;
+
       document.getElementById('stopDrainModal').classList.remove('hidden');
+
     }
+
+
 
     function handleSaveStopDrain(e) {
+
       e.preventDefault();
+
       const b = batches.find(x => x.id === document.getElementById('stopDrainBatchId').value);
+
       if (b) {
+
         b.drainEndTime = new Date().toISOString();
+
         const start = new Date(b.drainStartTime);
+
         const end = new Date(b.drainEndTime);
+
         b.drainDurationMinutes = Math.round((end - start) / (1000 * 60));
+
         b.rawSoundingAfterDrain = parseInt(document.getElementById('soundingAfterDrain').value);
+
         b.drainTemp = parseInt(document.getElementById('drainTemp').value);
+
         b.status = 'DRAINED';
+
         closeStopDrainModal();
+
         saveState();
+
         syncToGoogleSheets(b);
+
       }
+
     }
+
+
 
     function formatDuration(mins) {
+
       const h = Math.floor(mins / 60);
+
       const m = mins % 60;
+
       return h > 0 ? `${h} jam ${m} menit` : `${m} menit`;
+
     }
+
+
 
     function completeBatch(id) {
+
       const b = batches.find(x => x.id === id);
+
       if (b) { 
+
         b.status = 'COMPLETED'; 
+
         saveState(); 
+
         syncToGoogleSheets(b);
+
       }
+
     }
+
+
 
     function sendToWhatsApp(id) {
+
       const b = batches.find(x => x.id === id);
+
       if (!b) return;
 
+
+
       const initCalc = calculateExactKgWithOffset(b.rawInitialSounding, b.feedTemp, b.targetTank);
+
       
+
       const caKg = (b.caSackCount || 0) * 25;
+
       const waterKg = b.waterQty <= 100 ? (b.waterQty || 0) * 1000 : (b.waterQty || 0);
+
       const mixKgTotal = initCalc.kg + caKg + waterKg;
 
+
+
       const mixCalc = calculateExactKgWithOffset(b.rawSoundingAfterDosing, b.mixTemp, b.targetTank);
+
       const drainCalc = calculateExactKgWithOffset(b.rawSoundingAfterDrain, b.drainTemp, b.targetTank);
+
       const qtyLossKg = (mixKgTotal && drainCalc.kg) ? (mixKgTotal - drainCalc.kg) : 0;
 
+
+
       const text = `*LAPORAN PROSES DRAIN WASHING PLANT*
+
 Batch: ${b.id}
-Tanggal: ${b.createdAt ? new Date(b.createdAt).toLocaleDateString('id-ID') : '-'}
+
 Tanki: ${b.targetTank} (Asal: ${b.sourceTank})
 
+
+
 - Sounding Awal: Input ${b.rawInitialSounding}mm -> *Final ${initCalc.finalMM}mm* (${initCalc.kg.toLocaleString('id-ID')} Kg @ ${b.feedTemp}°C)
+
   *Lab Feed Awal:* Phos ${b.feedLab?b.feedLab.phos:'-'} ppm | FFA ${b.feedLab?b.feedLab.ffa:'-'}% | M&I ${b.feedLab?b.feedLab.mi:'-'}%
+
 - Dosis CA: ${b.caSackCount || 0} Sack (${caKg} Kg) | Air: ${b.waterQty || 0} M³ (${waterKg.toLocaleString('id-ID')} Kg)
+
 - Total Campuran: Sounding Final *${mixCalc.finalMM}mm* -> *Total ${mixKgTotal.toLocaleString('id-ID')} Kg*
+
 - Sounding Selesai Drain: Input ${b.rawSoundingAfterDrain||0}mm -> *Final ${drainCalc.finalMM}mm* (${drainCalc.kg.toLocaleString('id-ID')} Kg @ ${b.drainTemp||'-'}°C)
+
 - *TOTAL QTY LOSS DRAIN: ${qtyLossKg.toLocaleString('id-ID')} Kg*
+
 - Lama Drain: ${b.drainDurationMinutes ? formatDuration(b.drainDurationMinutes) : '-'}
 
+
+
 *LAB RESULT AFTER WASHING:*
+
 - Phosporus: ${b.lab ? b.lab.phos + ' PPM' : '-'}
+
 - FFA: ${b.lab ? b.lab.ffa + ' %' : '-'}
+
 - M&I: ${b.lab ? b.lab.mi + ' %' : '-'}`;
 
+
+
       window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+
     }
+
+
 
     function updateBottomNotice() {
-      const tankEl = document.getElementById('targetTank');
-      if (!tankEl) return;
-      const tank = tankEl.value;
+
+      const tank = document.getElementById('targetTank').value;
+
       const offset = getTankBottomOffset(tank);
-      const noticeEl = document.getElementById('initialNotice');
-      if (noticeEl) noticeEl.innerText = `Akan otomatis ditambah +${offset} mm (Bottom)`;
+
+      document.getElementById('initialNotice').innerText = `Akan otomatis ditambah +${offset} mm (Bottom)`;
+
     }
+
+
 
     function openNewBatchModal() { 
+
       updateBottomNotice();
-      const modal = document.getElementById('newBatchModal');
-      if (modal) modal.classList.remove('hidden'); 
+
+      document.getElementById('newBatchModal').classList.remove('hidden'); 
+
     }
 
-    function closeNewBatchModal() { 
-      const modal = document.getElementById('newBatchModal');
-      if (modal) modal.classList.add('hidden'); 
-    }
+    function closeNewBatchModal() { document.getElementById('newBatchModal').classList.add('hidden'); }
+
+
 
     function handleCreateBatch(e) {
-      e.preventDefault();
-      const now = new Date();
-      const dateStr = now.toISOString().slice(0,10).replace(/-/g,'');
-      const newId = `BATCH-${dateStr}-${Math.floor(10 + Math.random() * 90)}`;
 
-      const feedPhosEl = document.getElementById('newFeedPhos');
-      const feedFFAEl = document.getElementById('newFeedFFA');
-      const feedMIEl = document.getElementById('newFeedMI');
+      e.preventDefault();
+
+      const newId = `BATCH-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${Math.floor(10 + Math.random() * 90)}`;
+
+      const feedPhos = document.getElementById('feedPhos').value;
+
+      const feedFFA = document.getElementById('feedFFA').value;
+
+      const feedMI = document.getElementById('feedMI').value;
+
+
 
       const newBatch = {
+
         id: newId,
-        createdAt: now.toISOString(),
+
         targetTank: document.getElementById('targetTank').value,
+
         sourceTank: document.getElementById('sourceTank').value,
+
         rawInitialSounding: parseInt(document.getElementById('initialSounding').value),
+
         feedTemp: parseInt(document.getElementById('feedTemp').value),
+
         feedLab: {
-          phos: feedPhosEl && feedPhosEl.value ? parseFloat(feedPhosEl.value) : null,
-          ffa: feedFFAEl && feedFFAEl.value ? parseFloat(feedFFAEl.value) : null,
-          mi: feedMIEl && feedMIEl.value ? parseFloat(feedMIEl.value) : null
+
+          phos: feedPhos ? parseFloat(feedPhos) : null,
+
+          ffa: feedFFA ? parseFloat(feedFFA) : null,
+
+          mi: feedMI ? parseFloat(feedMI) : null
+
         },
+
         status: 'INITIAL'
+
       };
 
+
+
       batches.unshift(newBatch);
+
       closeNewBatchModal();
+
       saveState();
+
       syncToGoogleSheets(newBatch);
-      const form = document.getElementById('newBatchForm');
-      if (form) form.reset();
+
     }
+
+
 
     function openDosingModal(id) {
+
       document.getElementById('dosingBatchId').value = id;
+
       document.getElementById('dosingModal').classList.remove('hidden');
+
     }
+
     function closeDosingModal() { document.getElementById('dosingModal').classList.add('hidden'); }
 
+
+
+    // --- Handling Input Dosis CA & Air dengan Kalkulasi Kg Campuran Baru ---
+
     function handleSaveDosing(e) {
+
       e.preventDefault();
+
       const b = batches.find(x => x.id === document.getElementById('dosingBatchId').value);
+
       if (b) {
+
         b.caSackCount = parseInt(document.getElementById('caSackCount').value);
+
         const waterVal = parseFloat(document.getElementById('waterQty').value);
+
         b.waterQty = waterVal;
 
+
+
+        // Sounding Campuran Otomatis dari Total Liter
+
         const initCalc = calculateExactKgWithOffset(b.rawInitialSounding, b.feedTemp, b.targetTank);
+
         const waterInLiters = waterVal <= 100 ? waterVal * 1000 : waterVal;
+
         const totalMixVolumeInLiter = initCalc.liter + waterInLiters;
 
+
+
         const offset = getTankBottomOffset(b.targetTank);
+
         const totalFinalMM = reverseLookupMMFromLiter(totalMixVolumeInLiter);
 
+
+
         b.rawSoundingAfterDosing = Math.max(0, totalFinalMM - offset);
+
         b.mixTemp = b.feedTemp;
+
         b.status = 'SEDIMENTATION';
 
+
+
         closeDosingModal();
+
         saveState();
+
         syncToGoogleSheets(b);
+
       }
+
     }
+
+
 
     function closeStopDrainModal() { document.getElementById('stopDrainModal').classList.add('hidden'); }
+
     function openLabModal(id) { document.getElementById('labBatchId').value = id; document.getElementById('labModal').classList.remove('hidden'); }
+
     function closeLabModal() { document.getElementById('labModal').classList.add('hidden'); }
 
+
+
     function handleSaveLab(e) {
+
       e.preventDefault();
+
       const b = batches.find(x => x.id === document.getElementById('labBatchId').value);
+
       if (b) {
+
         b.lab = {
+
           phos: parseFloat(document.getElementById('labPhos').value),
+
           ffa: parseFloat(document.getElementById('labFFA').value),
+
           mi: parseFloat(document.getElementById('labMI').value)
+
         };
+
         b.status = 'READY_TRANSFER';
+
         closeLabModal();
+
         saveState();
+
         syncToGoogleSheets(b);
+
       }
+
     }
 
-    function getFilteredBatches() {
-      const searchEl = document.getElementById('searchInput');
-      const startEl = document.getElementById('filterStartDate');
-      const endEl = document.getElementById('filterEndDate');
 
-      const query = searchEl ? searchEl.value.toLowerCase() : '';
-      const startDateVal = startEl ? startEl.value : '';
-      const endDateVal = endEl ? endEl.value : '';
-
-      return batches.filter(b => {
-        const matchesSearch = b.id.toLowerCase().includes(query) || b.targetTank.toLowerCase().includes(query);
-
-        let matchesDate = true;
-        if (startDateVal || endDateVal) {
-          let batchDateStr = '';
-          if (b.createdAt) {
-            batchDateStr = b.createdAt.slice(0, 10);
-          } else {
-            const parts = b.id.split('-');
-            if (parts.length >= 2 && parts[1].length === 8) {
-              const y = parts[1].slice(0, 4);
-              const m = parts[1].slice(4, 6);
-              const d = parts[1].slice(6, 8);
-              batchDateStr = `${y}-${m}-${d}`;
-            }
-          }
-
-          if (batchDateStr) {
-            if (startDateVal && batchDateStr < startDateVal) matchesDate = false;
-            if (endDateVal && batchDateStr > endDateVal) matchesDate = false;
-          }
-        }
-
-        return matchesSearch && matchesDate;
-      });
-    }
-
-    function clearDateFilter() {
-      if (document.getElementById('filterStartDate')) document.getElementById('filterStartDate').value = '';
-      if (document.getElementById('filterEndDate')) document.getElementById('filterEndDate').value = '';
-      renderTable();
-    }
 
     function renderTable() {
+
       const tbody = document.getElementById('historyTableBody');
-      if (!tbody) return;
+
+      const query = document.getElementById('searchInput').value.toLowerCase();
+
       tbody.innerHTML = '';
 
-      const filtered = getFilteredBatches();
 
-      if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="11" class="p-4 text-center text-slate-400">Tidak ada data batch yang sesuai dengan filter.</td></tr>`;
-        return;
-      }
+
+      const filtered = batches.filter(b => b.id.toLowerCase().includes(query) || b.targetTank.toLowerCase().includes(query));
+
+
 
       filtered.forEach(b => {
+
         const initCalc = calculateExactKgWithOffset(b.rawInitialSounding, b.feedTemp, b.targetTank);
+
         
+
         const caKg = (b.caSackCount || 0) * 25;
+
         const waterKg = b.waterQty <= 100 ? (b.waterQty || 0) * 1000 : (b.waterQty || 0);
+
         const mixKgTotal = b.caSackCount || b.waterQty ? (initCalc.kg + caKg + waterKg) : null;
 
+
+
         const mixCalc = calculateExactKgWithOffset(b.rawSoundingAfterDosing, b.mixTemp, b.targetTank);
+
         const drainCalc = calculateExactKgWithOffset(b.rawSoundingAfterDrain, b.drainTemp, b.targetTank);
+
         const qtyLossKg = (mixKgTotal && drainCalc.kg) ? (mixKgTotal - drainCalc.kg) : '-';
 
-        const displayDate = b.createdAt ? new Date(b.createdAt).toLocaleDateString('id-ID') : '';
+
 
         const tr = document.createElement('tr');
+
         tr.className = "hover:bg-slate-50 transition border-b border-slate-100";
+
         tr.innerHTML = `
-          <td class="p-3">
-            <span class="font-mono font-bold block">${b.id}</span>
-            <span class="text-[10px] text-slate-400">${displayDate}</span>
-          </td>
+
+          <td class="p-3 font-mono font-bold">${b.id}</td>
+
           <td class="p-3 font-bold text-slate-700">${b.targetTank}</td>
+
           <td class="p-3">In: ${b.rawInitialSounding} mm ➔ <b>Final: ${initCalc.finalMM} mm</b><br><span class="text-[10px] text-slate-400">(${initCalc.kg.toLocaleString('id-ID')} Kg @ ${b.feedTemp}°C)</span></td>
+
           <td class="p-3">${b.feedLab && (b.feedLab.phos || b.feedLab.ffa || b.feedLab.mi) ? `${b.feedLab.phos || '-'} ppm / ${b.feedLab.ffa \vert{}\vert{} '-'}\% /${b.feedLab.mi || '-'}%` : '-'}</td>
+
           <td class="p-3">${b.caSackCount ? b.caSackCount + ' Sack / ' + b.waterQty + ' M³' : '-'}</td>
+
           <td class="p-3">${mixCalc.finalMM ? 'Final: <b>' + mixCalc.finalMM + ' mm</b><br><span class="text-[10px] text-blue-700 font-bold">(' + mixKgTotal.toLocaleString('id-ID') + ' Total Kg)</span>' : '-'}</td>
+
           <td class="p-3">${drainCalc.finalMM ? 'In: ' + b.rawSoundingAfterDrain + ' mm ➔ <b>Final: ' + drainCalc.finalMM + ' mm</b><br><span class="text-[10px] text-slate-400">(' + drainCalc.kg.toLocaleString('id-ID') + ' Kg @ ' + b.drainTemp + '°C)</span>' : '-'}</td>
+
           <td class="p-3 font-extrabold text-red-600">${typeof qtyLossKg === 'number' ? qtyLossKg.toLocaleString('id-ID') + ' Kg' : '-'}</td>
+
           <td class="p-3">${b.lab ? `${b.lab.phos || '-'} ppm / ${b.lab.ffa \vert{}\vert{} '-'}\% /${b.lab.mi || '-'}%` : '-'}</td>
+
           <td class="p-3"><span class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-200 text-slate-700">${b.status}</span></td>
+
           <td class="p-3 text-center space-x-1">
+
             <button onclick="openEditModal('${b.id}')" class="text-amber-600 hover:text-amber-800" title="Edit Data"><i class="fa-solid fa-pen-to-square"></i></button>
+
             <button onclick="deleteBatch('${b.id}')" class="text-red-500 hover:text-red-700" title="Hapus Data"><i class="fa-solid fa-trash"></i></button>
+
           </td>
+
         `;
+
         tbody.appendChild(tr);
+
       });
+
     }
+
+
 
     function deleteBatch(id) {
+
       if (confirm(`Hapus data ${id}?`)) {
+
         batches = batches.filter(x => x.id !== id);
+
         saveState();
+
       }
+
     }
+
+
 
     function exportToCSV() {
-      const dataToExport = getFilteredBatches();
 
-      if (dataToExport.length === 0) {
-        alert("Tidak ada data batch untuk di-export pada range tanggal ini!");
-        return;
-      }
+      let csv = "Batch ID,Target Tank,Source Tank,Input Awal (mm),Offset Bottom (mm),Final Awal (mm),Suhu Feed (C),Awal (Kg),Feed Phos (PPM),Feed FFA (%),Feed M&I (%),Sack CA,CA (Kg),QTY Air (M3),Air (Kg),Sounding Campuran (mm),Total Campuran (Kg),Input Drain (mm),Final Drain (mm),Suhu Drain (C),Drain (Kg),QTY Loss Drain (Kg),Lama Drain (Mnt),Washing Phos (PPM),Washing FFA (%),Washing M&I (%),Status\n";
 
-      let csv = "Batch ID,Waktu Dibuat,Target Tank,Source Tank,Input Awal (mm),Offset Bottom (mm),Final Awal (mm),Suhu Feed (C),Awal (Kg),Feed Phos (PPM),Feed FFA (%),Feed M&I (%),Sack CA,CA (Kg),QTY Air (M3),Air (Kg),Sounding Campuran (mm),Total Campuran (Kg),Input Drain (mm),Final Drain (mm),Suhu Drain (C),Drain (Kg),QTY Loss Drain (Kg),Lama Drain (Mnt),Washing Phos (PPM),Washing FFA (%),Washing M&I (%),Status\n";
-      
-      dataToExport.forEach(b => {
+      batches.forEach(b => {
+
         const initCalc = calculateExactKgWithOffset(b.rawInitialSounding, b.feedTemp, b.targetTank);
+
         
+
         const caKg = (b.caSackCount || 0) * 25;
+
         const waterKg = b.waterQty <= 100 ? (b.waterQty || 0) * 1000 : (b.waterQty || 0);
+
         const mixKgTotal = b.caSackCount || b.waterQty ? (initCalc.kg + caKg + waterKg) : 0;
 
+
+
         const mixCalc = calculateExactKgWithOffset(b.rawSoundingAfterDosing, b.mixTemp, b.targetTank);
+
         const drainCalc = calculateExactKgWithOffset(b.rawSoundingAfterDrain, b.drainTemp, b.targetTank);
+
         const qtyLossKg = (mixKgTotal && drainCalc.kg) ? (mixKgTotal - drainCalc.kg) : 0;
 
-        const createdAtStr = b.createdAt ? new Date(b.createdAt).toLocaleString('id-ID') : '';
 
-        csv += `"${b.id}","${createdAtStr}","${b.targetTank}","${b.sourceTank}",${b.rawInitialSounding},${initCalc.offset},${initCalc.finalMM},${b.feedTemp},${initCalc.kg},${b.feedLab?b.feedLab.phos:''},${b.feedLab?b.feedLab.ffa:''},${b.feedLab?b.feedLab.mi:''},${b.caSackCount||0},${caKg},${b.waterQty||0},${waterKg},${mixCalc.finalMM},${mixKgTotal},${b.rawSoundingAfterDrain||0},${drainCalc.finalMM},${b.drainTemp||0},${drainCalc.kg},${qtyLossKg},${b.drainDurationMinutes||0},${b.lab?b.lab.phos:''},${b.lab?b.lab.ffa:''},${b.lab?b.lab.mi:''},"${b.status}"\n`;
+
+        csv += `"${b.id}","${b.targetTank}","${b.sourceTank}",${b.rawInitialSounding},${initCalc.offset},${initCalc.finalMM},${b.feedTemp},${initCalc.kg},${b.feedLab?b.feedLab.phos:''},${b.feedLab?b.feedLab.ffa:''},${b.feedLab?b.feedLab.mi:''},${b.caSackCount||0},${caKg},${b.waterQty||0},${waterKg},${mixCalc.finalMM},${mixKgTotal},${b.rawSoundingAfterDrain||0},${drainCalc.finalMM},${b.drainTemp||0},${drainCalc.kg},${qtyLossKg},${b.drainDurationMinutes||0},${b.lab?b.lab.phos:''},${b.lab?b.lab.ffa:''},${b.lab?b.lab.mi:''},"${b.status}"\n`;
+
       });
 
-      const startEl = document.getElementById('filterStartDate');
-      const endEl = document.getElementById('filterEndDate');
-      const startDateVal = startEl ? startEl.value : '';
-      const endDateVal = endEl ? endEl.value : '';
-      let filenameRange = new Date().toISOString().slice(0,10);
-      
-      if (startDateVal || endDateVal) {
-        filenameRange = `${startDateVal || 'Awal'}_s-d_${endDateVal || 'Akhir'}`;
-      }
+      const blob = new Blob([csv], { type: 'text/csv' });
 
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const url = window.URL.createObjectURL(blob);
+
       const a = document.createElement('a');
+
       a.setAttribute('href', url);
-      a.setAttribute('download', `Washing_Plant_Report_${filenameRange}.csv`);
+
+      a.setAttribute('download', `Washing_Plant_Report_${new Date().toISOString().slice(0,10)}.csv`);
+
       a.click();
+
     }
 
+
+
     renderApp();
+
   </script>
+
 </body>
+
 </html>
