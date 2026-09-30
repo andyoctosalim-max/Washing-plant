@@ -242,9 +242,9 @@
         <div class="border-t pt-3 space-y-2">
           <span class="text-xs font-bold text-indigo-700 block">Quality Feed Awal (Opsional)</span>
           <div class="grid grid-cols-3 gap-2">
-            <input type="number" step="0.001" id="feedPhos" placeholder="Phos (PPM)" class="border p-1.5 rounded text-sm">
-            <input type="number" step="0.01" id="feedFFA" placeholder="FFA (%)" class="border p-1.5 rounded text-sm">
-            <input type="number" step="0.01" id="feedMI" placeholder="M&I (%)" class="border p-1.5 rounded text-sm">
+            <input type="number" step="0.001" id="newFeedPhos" placeholder="Phos (PPM)" class="border p-1.5 rounded text-sm">
+            <input type="number" step="0.01" id="newFeedFFA" placeholder="FFA (%)" class="border p-1.5 rounded text-sm">
+            <input type="number" step="0.01" id="newFeedMI" placeholder="M&I (%)" class="border p-1.5 rounded text-sm">
           </div>
         </div>
         <div class="pt-3 flex gap-2">
@@ -843,9 +843,10 @@ Tanki: ${b.targetTank} (Asal: ${b.sourceTank})
       const now = new Date();
       const dateStr = now.toISOString().slice(0,10).replace(/-/g,'');
       const newId = `BATCH-${dateStr}-${Math.floor(10 + Math.random() * 90)}`;
-      const feedPhos = document.getElementById('feedPhos').value;
-      const feedFFA = document.getElementById('feedFFA').value;
-      const feedMI = document.getElementById('feedMI').value;
+
+      const feedPhosVal = document.getElementById('newFeedPhos').value;
+      const feedFFAVal = document.getElementById('newFeedFFA').value;
+      const feedMIVal = document.getElementById('newFeedMI').value;
 
       const newBatch = {
         id: newId,
@@ -855,9 +856,9 @@ Tanki: ${b.targetTank} (Asal: ${b.sourceTank})
         rawInitialSounding: parseInt(document.getElementById('initialSounding').value),
         feedTemp: parseInt(document.getElementById('feedTemp').value),
         feedLab: {
-          phos: feedPhos ? parseFloat(feedPhos) : null,
-          ffa: feedFFA ? parseFloat(feedFFA) : null,
-          mi: feedMI ? parseFloat(feedMI) : null
+          phos: feedPhosVal ? parseFloat(feedPhosVal) : null,
+          ffa: feedFFAVal ? parseFloat(feedFFAVal) : null,
+          mi: feedMIVal ? parseFloat(feedMIVal) : null
         },
         status: 'INITIAL'
       };
@@ -866,6 +867,7 @@ Tanki: ${b.targetTank} (Asal: ${b.sourceTank})
       closeNewBatchModal();
       saveState();
       syncToGoogleSheets(newBatch);
+      document.getElementById('newBatchForm').reset();
     }
 
     function openDosingModal(id) {
@@ -919,20 +921,16 @@ Tanki: ${b.targetTank} (Asal: ${b.sourceTank})
       }
     }
 
-    // Helper untuk memfilter data berdasarkan range tanggal
     function getFilteredBatches() {
       const query = document.getElementById('searchInput').value.toLowerCase();
       const startDateVal = document.getElementById('filterStartDate').value;
       const endDateVal = document.getElementById('filterEndDate').value;
 
       return batches.filter(b => {
-        // Match Search Text
         const matchesSearch = b.id.toLowerCase().includes(query) || b.targetTank.toLowerCase().includes(query);
 
-        // Match Date Range
         let matchesDate = true;
         if (startDateVal || endDateVal) {
-          // Ambil tanggal pembuatan batch atau ekstrak dari BATCH ID (Format: BATCH-YYYYMMDD-XX)
           let batchDateStr = '';
           if (b.createdAt) {
             batchDateStr = b.createdAt.slice(0, 10);
@@ -1018,7 +1016,6 @@ Tanki: ${b.targetTank} (Asal: ${b.sourceTank})
       }
     }
 
-    // Export Excel / CSV dengan Penyesuaian Range Tanggal
     function exportToCSV() {
       const dataToExport = getFilteredBatches();
 
